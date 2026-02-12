@@ -1,0 +1,146 @@
+{
+	"info": {
+		"_postman_id": "seven-board-collection",
+		"name": "Seven Board API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Listar Cards",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3001/api/cards",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"cards"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Criar Solicitação (com arquivo)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "departamento",
+							"value": "Marketing",
+							"type": "text"
+						},
+						{
+							"key": "tipoSolicitacao",
+							"value": "Vídeo (30 dias)",
+							"type": "text"
+						},
+						{
+							"key": "descricao",
+							"value": "Vídeo institucional para campanha de natal.",
+							"type": "text"
+						},
+						{
+							"key": "veiculacao",
+							"value": "[\"Digital\", \"TV\"]",
+							"type": "text"
+						},
+						{
+							"key": "dataEntrega",
+							"value": "2024-12-25",
+							"type": "text"
+						},
+						{
+							"key": "observacoes",
+							"value": "Alta resolução necessária.",
+							"type": "text"
+						},
+						{
+							"key": "arquivo",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:3001/api/cards",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"cards"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Atualizar Status",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"in-progress\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3001/api/cards/:id/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"cards",
+						":id",
+						"status"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "ID_DO_CARD"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3001/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

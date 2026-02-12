@@ -1,0 +1,357 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { Logo7B } from './components/Logo7B';
+import './SolicitacaoForm.css';
+
+const TIPOS_SOLICITACAO = [
+  'Arte para Instagram/Whatsapp (5 dias)',
+  'Cobertura de Eventos (20 dias)',
+  'Assessoria de Imprensa/Matérias (20 dias)',
+  'Vídeo (30 dias)',
+  'Identidade visual completa para eventos (30 dias)',
+  'Transmissão de Live (30 dias)',
+  'Arquivos digitais como boletim informativo (30 dias)',
+  'Arquivos como pulseiras, camisetas (10 dias)'
+];
+
+const OPCOES_VEICULACAO = [
+  'Digital',
+  'Impresso',
+  'Outro'
+];
+
+export function SolicitacaoForm() {
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const [formData, setFormData] = useState({
+    departamento: '',
+    email: '',
+    tipoSolicitacao: '',
+    descricao: '',
+    veiculacao: [] as string[],
+    dataEntrega: '',
+    horarioEntrega: '',
+    observacoes: ''
+  });
+  const [arquivo, setArquivo] = useState<File | null>(null);
+
+  useEffect(() => {
+    document.title = 'Solicitações';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setFormData({
+          departamento: '',
+          email: '',
+          tipoSolicitacao: '',
+          descricao: '',
+          veiculacao: [],
+          dataEntrega: '',
+          horarioEntrega: '',
+          observacoes: ''
+        });
+        setArquivo(null);
+      }
+    };
+
+    globalThis.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      globalThis.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    setFormData(prev => {
+      const newData = { ...prev, [name]: value };
+      
+      // Auto-fill time if date is selected and time is empty
+      if (name === 'dataEntrega' && value && !prev.horarioEntrega) {
+        newData.horarioEntrega = getCurrentTime();
+      }
+      
+      return newData;
+    });
+  };
+
+  const handleCheckboxChange = (option: string) => {
+    setFormData(prev => {
+      const current = prev.veiculacao;
+      const updated = current.includes(option)
+        ? current.filter(item => item !== option)
+        : [...current, option];
+      return { ...prev, veiculacao: updated };
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setArquivo(e.target.files[0]);
+    }
+  };
+
+  const toggleAllVeiculacao = () => {
+    setFormData(prev => ({
+      ...prev,
+      veiculacao: prev.veiculacao.length === OPCOES_VEICULACAO.length ? [] : [...OPCOES_VEICULACAO]
+    }));
+  };
+
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    
+    const data = new FormData();
+    data.append('departamento', formData.departamento);
+    data.append('email', formData.email);
+    data.append('tipoSolicitacao', formData.tipoSolicitacao);
+    data.append('descricao', formData.descricao);
+    data.append('dataEntrega', formData.dataEntrega);
+    data.append('horarioEntrega', formData.horarioEntrega);
+    data.append('observacoes', formData.observacoes);
+    // Enviar array como string JSON para simplificar parse no backend (ou append múltiplo)
+    data.append('veiculacao', JSON.stringify(formData.veiculacao));
+    
+    if (arquivo) {
+      data.append('arquivo', arquivo);
+    }
+
+    axios.post('http://localhost:3001/api/cards', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+      .then(() => {
+        setFormData({
+          departamento: '',
+          email: '',
+          tipoSolicitacao: '',
+          descricao: '',
+          veiculacao: [],
+          dataEntrega: '',
+          horarioEntrega: '',
+          observacoes: ''
+        });
+        setArquivo(null);
+        toast.success('Solicitação enviada com sucesso!');
+        // navigate('/'); // Removido redirecionamento para permitir novas solicitações
+      })
+      .catch((error) => {
+        console.error('Error creating solicitacao:', error);
+        toast.error('Erro ao enviar solicitação');
+      });
+  };
+
+  return (
+    <div className="solicitacao-container">
+      <div className="sidebar-info">
+        <div className="logo-placeholder">ASRS+</div>
+        <h2>Solicitações de Marketing - Midia ASR</h2>
+        <p>Utilize este formulário para abrir solicitações para a equipe de marketing!</p>
+      </div>
+      
+      <div className="form-content">
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
+          <div className="form-grid">
+            {/* Coluna Esquerda */}
+            <div className="form-column">
+              <div className="form-group">
+                <label htmlFor="departamento">
+                  <span className="material-icons">business</span>{' '}
+                  Departamento
+                </label>
+                <p className="helper-text">Selecione abaixo o departamento.</p>
+                <select 
+                  name="departamento" 
+                  value={formData.departamento} 
+                  onChange={handleInputChange} 
+                  required
+                  className="form-control"
+                >
+                  <option value="">Escolha uma opção</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Vendas">Vendas</option>
+                  <option value="RH">RH</option>
+                  <option value="Financeiro">Financeiro</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">
+                  <span className="material-icons">email</span>{' '}
+                  Email do Solicitante
+                </label>
+                <p className="helper-text">Seu email para receber confirmação.</p>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="form-control"
+                  placeholder="seu.nome@exemplo.com"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="tipoSolicitacao">
+                  <span className="material-icons">category</span>{' '}
+                  Tipo de solicitação e prazos (peça com antecedência)
+                </label>
+                <p className="helper-text">Selecione o tipo de serviço que você precisa:</p>
+                <div className="radio-group">
+                  {TIPOS_SOLICITACAO.map(tipo => (
+                    <div key={tipo} className="radio-item">
+                      <input
+                        type="radio"
+                        id={tipo}
+                        name="tipoSolicitacao"
+                        value={tipo}
+                        checked={formData.tipoSolicitacao === tipo}
+                        onChange={handleInputChange}
+                        required
+                      />
+                      <label htmlFor={tipo}>{tipo}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="veiculacao">
+                  <span className="material-icons">share</span>{' '}
+                  Onde irá veicular
+                </label>
+                <p className="helper-text">Onde essa mídia será publicada/utilizada?</p>
+                <div className="checkbox-group">
+                  <div className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id="marcar-todos"
+                      checked={formData.veiculacao.length === OPCOES_VEICULACAO.length}
+                      onChange={toggleAllVeiculacao}
+                    />
+                    <label htmlFor="marcar-todos">Marcar todos</label>
+                  </div>
+                  {OPCOES_VEICULACAO.map(option => (
+                    <div key={option} className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        id={option}
+                        checked={formData.veiculacao.includes(option)}
+                        onChange={() => handleCheckboxChange(option)}
+                      />
+                      <label htmlFor={option}>{option}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna Direita */}
+            <div className="form-column">
+              <div className="form-group">
+                <label htmlFor="descricao">
+                  <span className="material-icons">description</span>{' '}
+                  Descreva a sua solicitação
+                </label>
+                <p className="helper-text">Descreva o máximo possível.</p>
+                <textarea
+                  name="descricao"
+                  value={formData.descricao}
+                  onChange={handleInputChange}
+                  placeholder="Digite aqui ..."
+                  required
+                  className="form-control"
+                  rows={4}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <span className="material-icons">event</span>{' '}
+                  Data e Hora de Entrega
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="date"
+                    name="dataEntrega"
+                    value={formData.dataEntrega}
+                    onChange={handleInputChange}
+                    required
+                    className="form-control"
+                    style={{ flex: 1 }}
+                  />
+                  <input
+                    type="time"
+                    name="horarioEntrega"
+                    value={formData.horarioEntrega}
+                    onChange={handleInputChange}
+                    required
+                    className="form-control"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="anexo">
+                  <span className="material-icons">attach_file</span>{' '}
+                  Anexos
+                </label>
+                <div className="file-upload-wrapper">
+                  <div className="file-upload-placeholder">
+                    <span className="plus-icon">+</span> {arquivo ? arquivo.name : 'Adicionar anexo'}
+                  </div>
+                  <input 
+                    type="file" 
+                    onChange={handleFileChange} 
+                    accept="image/*,.pdf,.doc,.docx"
+                  />
+                </div>
+                <p className="helper-text" style={{ marginTop: '8px' }}>Formatos: Imagens, PDF, Word</p>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="observacoes">
+                  <span className="material-icons">comment</span>{' '}
+                  Observações
+                </label>
+                <p className="helper-text">Mais alguma observação?</p>
+                <textarea
+                  name="observacoes"
+                  value={formData.observacoes}
+                  onChange={handleInputChange}
+                  placeholder="Digite aqui ..."
+                  className="form-control"
+                  rows={3}
+                />
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              <button type="submit" className="submit-btn">
+                <span className="material-icons" style={{ marginRight: '8px', fontSize: '18px' }}>send</span>{' '}
+                Enviar Solicitação
+              </button>
+              <p className="security-notice">
+                Nunca envie senhas ou dados confidenciais por meio de formulários desconhecidos. Certifique-se de que este formulário foi gerado por sua empresa ou por uma empresa confiável.
+              </p>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div className="logo-7b-wrapper">
+        <Logo7B />
+      </div>
+    </div>
+  );
+}

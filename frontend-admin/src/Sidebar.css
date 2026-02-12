@@ -1,0 +1,108 @@
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #eaecf0;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  height: 100vh;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 48px;
+  padding-left: 8px;
+}
+
+.sidebar-logo {
+  width: 42px;
+  height: 42px;
+  transition: transform 0.2s;
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.05);
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.5px;
+  font-family: 'Samsung Sharp Sans', 'Samsung Sharp', sans-serif;
+}
+
+.nav-menu {
+  flex: 1;
+}
+
+.section-title {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #9ca3af;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-left: 12px;
+  letter-spacing: 0.05em;
+}
+
+.nav-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-section li {
+  margin-bottom: 4px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+.nav-link:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+  transform: translateX(2px);
+}
+
+.nav-link .icon {
+  margin-right: 12px;
+  font-size: 20px;
+  color: #9ca3af;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-link:hover .icon {
+  color: #4b5563;
+}
+
+/* Active State */
+li.active .nav-link {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+li.active .nav-link .icon {
+  color: #2563eb;
+}
