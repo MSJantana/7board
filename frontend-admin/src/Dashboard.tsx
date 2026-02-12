@@ -158,7 +158,7 @@ export function Dashboard() {
     { id: 'cobertura-eventos', title: 'Cobertura de Eventos', status: 'cobertura-eventos', color: '#8b5cf6' }, // Violet
     { id: 'arte', title: 'Arte', status: 'arte', color: '#ec4899' }, // Pink
     { id: 'fazendo', title: 'Fazendo', status: 'fazendo', color: '#0ea5e9' }, // Sky Blue
-    { id: 'aprovacao', title: 'Aprovado', status: 'aprovacao', color: '#10b981' }, // Emerald
+    { id: 'aprovacao', title: 'A Aprovar', status: 'aprovacao', color: '#10b981' }, // Emerald
     { id: 'parado', title: 'Parado', status: 'parado', color: '#ef4444' }, // Red
     { id: 'done', title: 'Concluído', status: 'done', color: '#34d399' } // Emerald/Green
   ];
