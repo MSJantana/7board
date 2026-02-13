@@ -202,13 +202,22 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
               )}
 
               {card.status === 'done' && (
-                <button 
-                  className="action-btn btn-archive" 
-                  onClick={() => onStatusChange(card.id, 'archived')}
-                >
-                  <span className="material-icons">archive</span>
-                  <span>Arquivar</span>
-                </button>
+                <>
+                  <button 
+                    className="action-btn btn-reopen" 
+                    onClick={() => onStatusChange(card.id, 'todo')}
+                  >
+                    <span className="material-icons">refresh</span>
+                    <span>Reabrir</span>
+                  </button>
+                  <button 
+                    className="action-btn btn-archive" 
+                    onClick={() => onStatusChange(card.id, 'archived')}
+                  >
+                    <span className="material-icons">archive</span>
+                    <span>Arquivar</span>
+                  </button>
+                </>
               )}
             </div>
           )}

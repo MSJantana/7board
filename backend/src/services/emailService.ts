@@ -239,3 +239,46 @@ export const sendConclusaoEmail = async (to: string, solicitacaoData: any) => {
     return null;
   }
 };
+
+export const sendReaberturaEmail = async (to: string, solicitacaoData: any) => {
+  if (!to) {
+    console.log('Email não fornecido, pulando envio de reabertura.');
+    return;
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"Seven Board System" <noreply@sevenboard.com>',
+      to: to,
+      subject: `Solicitação Reaberta: ${solicitacaoData.protocolo || solicitacaoData.tipoSolicitacao}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #f59e0b;">Solicitação Reaberta</h2>
+          <p>Olá,</p>
+          <p>Sua solicitação foi <strong>REABERTA</strong> para revisão ou continuidade.</p>
+          
+          <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #fcd34d;">
+            <h3 style="margin-top: 0; color: #b45309;">Detalhes:</h3>
+            <ul style="list-style: none; padding: 0;">
+              <li style="margin-bottom: 8px;"><strong>Protocolo:</strong> ${solicitacaoData.protocolo || 'N/A'}</li>
+              <li style="margin-bottom: 8px;"><strong>Tipo:</strong> ${solicitacaoData.tipoSolicitacao}</li>
+              <li style="margin-bottom: 8px;"><strong>Status:</strong> Novas Solicitações</li>
+            </ul>
+          </div>
+
+          <p>Acompanhe o andamento pelo painel.</p>
+          
+          <p style="font-size: 12px; color: #666; margin-top: 30px;">
+            Este é um email automático, por favor não responda.
+          </p>
+        </div>
+      `,
+    });
+
+    console.log('Email de reabertura enviado com sucesso: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Erro ao enviar email de reabertura:', error);
+    return null;
+  }
+};

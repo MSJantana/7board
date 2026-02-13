@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
-import { sendSolicitacaoEmail, sendConclusaoEmail } from '../services/emailService';
+import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail } from '../services/emailService';
 
 export const getCards = async (req: Request, res: Response) => {
   try {
@@ -105,8 +105,30 @@ export const updateCardStatus = async (req: Request, res: Response) => {
   const { status } = req.body;
 
   try {
+    // Buscar card atual para verificar status anterior
+    const currentCard = await prisma.solicitacao.findUnique({
+      where: { id: String(id) }
+    });
+
+    if (!currentCard) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
     const updateData: any = { status };
     const now = new Date();
+
+    // Lógica de Reabertura (Done -> Todo)
+    if (currentCard.status === 'done' && status === 'todo') {
+      const logMessage = `\n[${now.toLocaleString('pt-BR')}] Solicitação reaberta.`;
+      updateData.observacoes = (currentCard.observacoes || '') + logMessage;
+      
+      // Enviar email de reabertura
+      if (currentCard.email) {
+        sendReaberturaEmail(currentCard.email, currentCard)
+          .catch(err => console.error('Falha no envio de email de reabertura:', err));
+      }
+      console.log(`Solicitação ${id} reaberta.`);
+    }
 
     if (status === 'in-progress') {
       updateData.startedAt = now;

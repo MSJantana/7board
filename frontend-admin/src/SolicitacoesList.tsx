@@ -3,6 +3,7 @@ import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
+import { Pagination } from './components/Pagination';
 
 interface Solicitacao {
   id: string;
@@ -29,6 +30,8 @@ export function SolicitacoesList() {
   const [filterDept, setFilterDept] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const fetchSolicitacoes = async () => {
     const response = await axios.get('http://localhost:3001/api/cards');
@@ -116,6 +119,16 @@ export function SolicitacoesList() {
     return matchesDept && matchesStatus && matchesSearch;
   });
 
+  const totalPages = Math.ceil(filteredSolicitacoes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredSolicitacoes.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
     <div className="solicitacoes-list-container">
       <div className="page-header">
@@ -127,7 +140,7 @@ export function SolicitacoesList() {
           <select 
             className="filter-select" 
             value={filterDept} 
-            onChange={(e) => setFilterDept(e.target.value)}
+            onChange={(e) => { setFilterDept(e.target.value); setCurrentPage(1); }}
           >
             <option value="">Todos Departamentos</option>
             <option value="Marketing">Marketing</option>
@@ -141,7 +154,7 @@ export function SolicitacoesList() {
           <select 
             className="filter-select"
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
           >
             <option value="">Todos Status</option>
             <option value="todo">Pendente</option>
@@ -157,7 +170,7 @@ export function SolicitacoesList() {
             className="search-input" 
             placeholder="Buscar por protocolo, descrição..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
         
@@ -179,7 +192,7 @@ export function SolicitacoesList() {
             </tr>
           </thead>
           <tbody>
-            {filteredSolicitacoes.map(item => (
+            {currentItems.map(item => (
               <>
                 <tr 
                   key={item.id} 
@@ -220,6 +233,20 @@ export function SolicitacoesList() {
                               <span className="detail-label">Descrição</span>
                               <div className="detail-value">{item.descricao}</div>
                             </div>
+
+                            {item.observacoes && (
+                              (() => {
+                                const userNotes = item.observacoes.split('\n')
+                                  .filter(l => !l.trim().startsWith('['))
+                                  .join('\n');
+                                return userNotes ? (
+                                  <div className="detail-item">
+                                    <span className="detail-label">Observações</span>
+                                    <div className="detail-value" style={{whiteSpace: 'pre-wrap'}}>{userNotes}</div>
+                                  </div>
+                                ) : null;
+                              })()
+                            )}
 
                             <div className="detail-item">
                               <span className="detail-label">Veiculação</span>
@@ -285,6 +312,26 @@ export function SolicitacoesList() {
                                 </div>
                               )}
 
+                              {item.observacoes?.split('\n').map((line) => {
+                                const trimmed = line.trim();
+                                if (trimmed.startsWith('[')) {
+                                  const closeBracket = trimmed.indexOf(']');
+                                  if (closeBracket > 1) {
+                                    const dateStr = trimmed.substring(1, closeBracket);
+                                    const msg = trimmed.substring(closeBracket + 1).trim();
+                                    if (msg.toLowerCase().includes('reaberta')) {
+                                      return (
+                                       <div key={trimmed} className="log-item reopened">
+                                         <div className="log-text">{msg}</div>
+                                         <span className="log-date">{dateStr}</span>
+                                       </div>
+                                      );
+                                   }
+                                  }
+                                }
+                                return null;
+                              })}
+
                               {(item.archivedAt || item.status === 'archived') && (
                                 <div className="log-item done">
                                   <div className="log-text">Arquivado</div>
@@ -305,7 +352,7 @@ export function SolicitacoesList() {
               </>
             ))}
             
-            {filteredSolicitacoes.length === 0 && (
+            {currentItems.length === 0 && (
               <tr>
                 <td colSpan={6} style={{textAlign: 'center', padding: '40px', color: '#888'}}>
                   Nenhuma solicitação encontrada.
@@ -315,6 +362,15 @@ export function SolicitacoesList() {
           </tbody>
         </table>
       </div>
+
+      {filteredSolicitacoes.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredSolicitacoes.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }

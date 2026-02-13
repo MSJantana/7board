@@ -15,7 +15,6 @@ export function Sidebar() {
 
       <nav className="nav-menu">
         <div className="nav-section">
-          <span className="section-title">General</span>
           <ul>
             <li className={isActive('/')}>
               <Link to="/" className="nav-link">

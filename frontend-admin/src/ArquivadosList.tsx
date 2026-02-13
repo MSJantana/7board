@@ -3,6 +3,7 @@ import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
+import { Pagination } from './components/Pagination';
 
 interface Solicitacao {
   id: string;
@@ -28,6 +29,8 @@ export function ArquivadosList() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterDept, setFilterDept] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const getDateValue = (item: Solicitacao) => {
     if (item.archivedAt) return new Date(item.archivedAt).getTime();
@@ -121,6 +124,16 @@ export function ArquivadosList() {
     return matchesDept && matchesSearch;
   });
 
+  const totalPages = Math.ceil(filteredSolicitacoes.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = filteredSolicitacoes.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
     <div className="solicitacoes-list-container">
       <div className="page-header">
@@ -132,7 +145,7 @@ export function ArquivadosList() {
           <select 
             className="filter-select" 
             value={filterDept} 
-            onChange={(e) => setFilterDept(e.target.value)}
+            onChange={(e) => { setFilterDept(e.target.value); setCurrentPage(1); }}
           >
             <option value="">Todos Departamentos</option>
             <option value="Marketing">Marketing</option>
@@ -149,7 +162,7 @@ export function ArquivadosList() {
             className="search-input" 
             placeholder="Buscar por protocolo, descrição..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
         
@@ -171,10 +184,10 @@ export function ArquivadosList() {
             </tr>
           </thead>
           <tbody>
-            {filteredSolicitacoes.map(item => (
+            {currentItems.map(item => (
               <>
                 <tr 
-                  key={item.id} 
+                  key={item.id}  
                   className={`row-clickable ${expandedId === item.id ? 'row-expanded' : ''}`}
                   onClick={() => toggleExpand(item.id)}
                 >
@@ -295,7 +308,7 @@ export function ArquivadosList() {
               </>
             ))}
             
-            {filteredSolicitacoes.length === 0 && (
+            {currentItems.length === 0 && (
               <tr>
                 <td colSpan={6} style={{textAlign: 'center', padding: '40px', color: '#888'}}>
                   Nenhum item arquivado.
@@ -305,6 +318,15 @@ export function ArquivadosList() {
           </tbody>
         </table>
       </div>
+
+      {filteredSolicitacoes.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredSolicitacoes.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={handlePageChange}
+        />
+      )}
     </div>
   );
 }
