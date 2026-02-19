@@ -3,16 +3,25 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { Sidebar } from './Sidebar';
+import { Header } from './components/Header';
 import { Dashboard } from './Dashboard';
 import { SolicitacoesList } from './SolicitacoesList';
 import { ArquivadosList } from './ArquivadosList';
 
+import { TopHeader } from './components/TopHeader';
+
 const DashboardLayout = () => (
-  <div className="app-container">
-    <Sidebar />
-    <main className="main-content">
-      <Outlet />
-    </main>
+  <div className="app-root">
+    <TopHeader />
+    <div className="app-body">
+      <Sidebar />
+      <div className="content-wrapper">
+        <Header />
+        <main className="main-content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   </div>
 );
 

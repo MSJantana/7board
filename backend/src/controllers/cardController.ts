@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import fs from 'node:fs';
 import prisma from '../config/database';
 import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail } from '../services/emailService';
 
@@ -96,13 +97,33 @@ export const createCard = async (req: Request, res: Response): Promise<void> => 
     res.status(201).json(newSolicitacao);
   } catch (error) {
     console.error('Error creating card:', error);
+    if (req.file) {
+      try {
+        const diskPath = (req.file as any).path || `uploads/${req.file.filename}`;
+        if (fs.existsSync(diskPath)) {
+          fs.unlinkSync(diskPath);
+        }
+      } catch (e) {
+        console.error('Error removing uploaded file after create failure:', e);
+      }
+    }
     res.status(500).json({ error: 'Failed to create card' });
   }
 };
 
+const formatLogDate = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const monthNames = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day} ${month} ${year} ${hours}:${minutes}`;
+};
+
 export const updateCardStatus = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status, observacoes } = req.body;
 
   try {
     // Buscar card atual para verificar status anterior
@@ -116,12 +137,16 @@ export const updateCardStatus = async (req: Request, res: Response) => {
 
     const updateData: any = { status };
     const now = new Date();
-
-    // Lógica de Reabertura (Done -> Todo)
-    if (currentCard.status === 'done' && status === 'todo') {
-      const logMessage = `\n[${now.toLocaleString('pt-BR')}] Solicitação reaberta.`;
+    
+    // Se o frontend enviar observações já formatadas (com histórico),
+    // usamos diretamente esse valor para manter a timeline consistente.
+    if (typeof observacoes === 'string') {
+      updateData.observacoes = observacoes;
+    } else if (currentCard.status === 'done' && status === 'todo') {
+      // Compatibilidade com clientes antigos que não enviam observações:
+      const logMessage = `\n[${formatLogDate(now)}] Solicitação reaberta.`;
       updateData.observacoes = (currentCard.observacoes || '') + logMessage;
-      
+
       // Enviar email de reabertura
       if (currentCard.email) {
         sendReaberturaEmail(currentCard.email, currentCard)
@@ -130,7 +155,7 @@ export const updateCardStatus = async (req: Request, res: Response) => {
       console.log(`Solicitação ${id} reaberta.`);
     }
 
-    if (status === 'in-progress') {
+    if (status === 'in-progress' || status === 'fazendo') {
       updateData.startedAt = now;
     } else if (status === 'done') {
       updateData.completedAt = now;

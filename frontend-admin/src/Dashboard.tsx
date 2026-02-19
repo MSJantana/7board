@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -152,6 +153,39 @@ export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
 
+  const statusLabel = (s: Solicitacao['status']) => {
+    switch (s) {
+      case 'todo': return 'Pendente';
+      case 'fazendo': return 'Fazendo';
+      case 'done': return 'Concluído';
+      case 'archived': return 'Arquivado';
+      case 'video-materiais': return 'Vídeos/Matérias';
+      case 'cobertura-eventos': return 'Cobertura de Eventos';
+      case 'arte': return 'Arte';
+      case 'aprovacao': return 'A Aprovar';
+      case 'parado': return 'Parado';
+      default: return s;
+    }
+  };
+
+  const appendObservacao = (card: Solicitacao, from: Solicitacao['status'], to: Solicitacao['status']) => {
+    const timestamp = format(new Date(), "dd MMM yyyy HH:mm", { locale: ptBR });
+    let text = '';
+    if (to === 'todo') {
+      text = 'Solicitação reaberta.';
+    } else if (to === 'fazendo') {
+      text = 'Fazendo';
+    } else if (to === 'done') {
+      text = 'Solicitação Concluída';
+    } else if (to === 'archived') {
+      text = 'Arquivado';
+    } else {
+      text = `Status alterado: ${statusLabel(from)} → ${statusLabel(to)}`;
+    }
+    const msg = `[${timestamp}] ${text}`;
+    return card.observacoes ? `${card.observacoes}\n${msg}` : msg;
+  };
+
   const columns: KanbanColumn[] = [
     { id: 'todo', title: 'Novas solicitações', status: 'todo', color: '#fbbf24' }, // Amber/Yellow
     { id: 'video-materiais', title: 'Videos/Matérias', status: 'video-materiais', color: '#3b82f6' }, // Blue
@@ -238,20 +272,21 @@ export function Dashboard() {
 
     console.log(`Moving card ${activeId} from ${sourceStatus} to ${destinationStatus}`);
 
-    // Optimistic update
+    // Optimistic update + append observação
+    const newObs = appendObservacao(activeCard, sourceStatus, destinationStatus);
     setSolicitacoes(prev => prev.map(item => 
-      item.id === activeId ? { ...item, status: destinationStatus } : item
+      item.id === activeId ? { ...item, status: destinationStatus, observacoes: newObs } : item
     ));
 
     try {
-      await axios.put(`http://localhost:3001/api/cards/${activeId}/status`, { status: destinationStatus });
+      await axios.put(`http://localhost:3001/api/cards/${activeId}/status`, { status: destinationStatus, observacoes: newObs });
       toast.success('Status atualizado!');
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erro ao atualizar status.');
       // Revert
       setSolicitacoes(prev => prev.map(item => 
-        item.id === activeId ? { ...item, status: sourceStatus } : item
+        item.id === activeId ? { ...item, status: sourceStatus, observacoes: activeCard.observacoes } : item
       ));
     }
   };
@@ -260,10 +295,6 @@ export function Dashboard() {
 
   return (
     <div className="dashboard-container">      
-      <div className="dashboard-header">
-        <h1>Quadro de Solicitações</h1>
-      </div>
-
       <DndContext 
         sensors={sensors}
         onDragStart={onDragStart}
@@ -305,18 +336,27 @@ export function Dashboard() {
              // We can create a dedicated handler or adapt here.
              // Adapting to reuse the logic but avoiding the event propagation stop which isn't needed in modal
              // Actually, let's just call the logic directly here or refactor handleStatusChange
-             
-             // Since handleStatusChange uses e.stopPropagation(), let's make a clean version
+             const card = solicitacoes.find(s => s.id === id);
+             const fromStatus = card?.status ?? 'todo';
+             const toStatus = status as Solicitacao['status'];
+             const newObs = card ? appendObservacao(card, fromStatus, toStatus) : undefined;
+
+             // Optimistic update
+             setSolicitacoes(prev => prev.map(item => 
+               item.id === id ? { ...item, status: toStatus, observacoes: newObs ?? item.observacoes } : item
+             ));
+
              const updateStatus = async () => {
                 try {
-                  await axios.put(`http://localhost:3001/api/cards/${id}/status`, { status });
-                  const data = await fetchCardsData();
-                  setSolicitacoes(data);
+                  await axios.put(`http://localhost:3001/api/cards/${id}/status`, { status: toStatus, observacoes: newObs });
                   toast.success(`Status atualizado com sucesso!`);
                   setSelectedCard(null); // Close modal on success
                 } catch (error) {
                   console.error('Error updating status:', error);
                   toast.error('Erro ao atualizar status.');
+                  // Recarregar para garantir consistência
+                  const data = await fetchCardsData();
+                  setSolicitacoes(data);
                 }
              };
              updateStatus();

@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Logo } from './components/Logo';
 import './Sidebar.css';
 
 export function Sidebar() {
@@ -8,11 +7,6 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="logo-area">
-        <Logo className="sidebar-logo" />
-        <span className="logo-text">SevenBoard</span>
-      </div>
-
       <nav className="nav-menu">
         <div className="nav-section">
           <ul>

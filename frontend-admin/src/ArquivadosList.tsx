@@ -136,10 +136,6 @@ export function ArquivadosList() {
 
   return (
     <div className="solicitacoes-list-container">
-      <div className="page-header">
-        <h2 className="page-title">Arquivados</h2>
-      </div>
-
       <div className="filters-bar">
         <div className="filter-group">
           <select 
@@ -274,7 +270,7 @@ export function ArquivadosList() {
                               
                               {(item.startedAt) && (
                                 <div className="log-item production">
-                                  <div className="log-text">Em Produção</div>
+                                  <div className="log-text">Fazendo</div>
                                   <span className="log-date">
                                     {format(parseISO(item.startedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
                                   </span>

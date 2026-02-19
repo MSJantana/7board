@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100%;
   background-color: #f8fafc; /* Slate 50 */
-  overflow: hidden;
 }
 
 .dashboard-header {

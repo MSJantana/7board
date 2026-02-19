@@ -7,15 +7,31 @@ body {
   color: #333;
 }
 
-.app-container {
+.app-root {
   display: flex;
-  min-height: 100vh;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #fdfbf7;
 }
 
 .main-content {
   flex: 1;
-  padding: 30px 40px;
-  overflow-y: auto;
+  padding: 20px 30px;
+  overflow: auto;
   background-color: #fdfbf7;
 }
 

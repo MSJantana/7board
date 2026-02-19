@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, parse, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
@@ -23,6 +23,21 @@ interface Solicitacao {
   completedAt?: string;
   archivedAt?: string;
 }
+
+const parseLogDate = (value: string): Date | null => {
+  const cleaned = value.replace(',', '').trim();
+  const patterns = [
+    'dd/MM/yyyy HH:mm:ss',
+    'dd/MM/yyyy HH:mm',
+    'dd MMM yyyy HH:mm'
+  ];
+
+  for (const pattern of patterns) {
+    const d = parse(cleaned, pattern, new Date());
+    if (isValid(d)) return d;
+  }
+  return null;
+};
 
 export function SolicitacoesList() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
@@ -131,10 +146,6 @@ export function SolicitacoesList() {
 
   return (
     <div className="solicitacoes-list-container">
-      <div className="page-header">
-        <h2 className="page-title">Histórico de Solicitações</h2>
-      </div>
-
       <div className="filters-bar">
         <div className="filter-group">
           <select 
@@ -290,55 +301,124 @@ export function SolicitacoesList() {
                                 </span>
                               </div>
                               
-                              {(item.startedAt || item.status === 'in-progress' || item.status === 'done') && (
+                              {item.startedAt && (
                                 <div className="log-item production">
-                                  <div className="log-text">Em Produção</div>
+                                  <div className="log-text">Fazendo</div>
                                   <span className="log-date">
-                                    {item.startedAt 
-                                      ? format(parseISO(item.startedAt), "dd MMM yyyy HH:mm", { locale: ptBR })
-                                      : '-'}
+                                    {format(parseISO(item.startedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
 
-                              {(item.completedAt || item.status === 'done') && (
+                              {item.completedAt && (
                                 <div className="log-item done">
                                   <div className="log-text">Solicitação Concluída</div>
                                   <span className="log-date">
-                                    {item.completedAt 
-                                      ? format(parseISO(item.completedAt), "dd MMM yyyy HH:mm", { locale: ptBR })
-                                      : '-'}
+                                    {format(parseISO(item.completedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}
 
                               {item.observacoes?.split('\n').map((line) => {
                                 const trimmed = line.trim();
-                                if (trimmed.startsWith('[')) {
-                                  const closeBracket = trimmed.indexOf(']');
-                                  if (closeBracket > 1) {
-                                    const dateStr = trimmed.substring(1, closeBracket);
-                                    const msg = trimmed.substring(closeBracket + 1).trim();
-                                    if (msg.toLowerCase().includes('reaberta')) {
-                                      return (
-                                       <div key={trimmed} className="log-item reopened">
-                                         <div className="log-text">{msg}</div>
-                                         <span className="log-date">{dateStr}</span>
-                                       </div>
-                                      );
-                                   }
+                                if (!trimmed.startsWith('[')) return null;
+                                const closeBracket = trimmed.indexOf(']');
+                                if (closeBracket <= 1) return null;
+                                const rawDate = trimmed.substring(1, closeBracket).trim();
+                                const msg = trimmed.substring(closeBracket + 1).trim();
+                                const parsedDate = parseLogDate(rawDate);
+                                const displayDate = parsedDate 
+                                  ? format(parsedDate, 'dd MMM yyyy HH:mm', { locale: ptBR })
+                                  : rawDate;
+
+                                // Detect "Status alterado: X → Y"
+                                const statusPrefix = 'Status alterado:';
+                                if (msg.startsWith(statusPrefix)) {
+                                  const arrowIdx = msg.indexOf('→');
+                                  const fromTo = msg.replace(statusPrefix, '').trim();
+                                  let toLabel = '';
+                                  if (arrowIdx !== -1) {
+                                    toLabel = fromTo.substring(arrowIdx + 1).trim();
                                   }
+
+                                  // Map destination status to timeline class
+                                  const cls = (() => {
+                                    const lower = toLabel.toLowerCase();
+                                    if (lower.includes('pendente') || lower.includes('pendentes')) return 'reopened';
+                                    if (lower.includes('fazendo')) return 'production';
+                                    if (lower.includes('concluído')) return 'done';
+                                    if (lower.includes('arquivado')) return 'done';
+                                    // Outros estágios (Arte, Vídeos/Matérias, Cobertura, A Aprovar, Parado)
+                                    return 'production';
+                                  })();
+                                  const displayText = (() => {
+                                    const lower = toLabel.toLowerCase();
+                                    if (lower.includes('pendente') || lower.includes('pendentes')) return 'Solicitação reaberta.';
+                                    if (lower.includes('fazendo')) return 'Fazendo';
+                                    if (lower.includes('concluído')) return 'Solicitação Concluída';
+                                    if (lower.includes('arquivado')) return 'Arquivado';
+                                    return toLabel;
+                                  })();
+
+                                  return (
+                                    <div key={trimmed} className={`log-item ${cls}`}>
+                                      <div className="log-text">{displayText}</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
                                 }
+
+                                // Fallback para mensagens como "reaberta"
+                                const lowerMsg = msg.toLowerCase();
+                                if (lowerMsg.includes('reaberta')) {
+                                  return (
+                                    <div key={trimmed} className="log-item reopened">
+                                      <div className="log-text">{msg}</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
+                                }
+                                if (lowerMsg.includes('fazendo')) {
+                                  return (
+                                    <div key={trimmed} className="log-item production">
+                                      <div className="log-text">{msg}</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
+                                }
+                                if (lowerMsg.includes('em produção')) {
+                                  return (
+                                    <div key={trimmed} className="log-item production">
+                                      <div className="log-text">Fazendo</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
+                                }
+                                if (lowerMsg.includes('solicitação concluída')) {
+                                  return (
+                                    <div key={trimmed} className="log-item done">
+                                      <div className="log-text">{msg}</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
+                                }
+                                if (lowerMsg.includes('arquivado')) {
+                                  return (
+                                    <div key={trimmed} className="log-item done">
+                                      <div className="log-text">{msg}</div>
+                                      <span className="log-date">{displayDate}</span>
+                                    </div>
+                                  );
+                                }
+
                                 return null;
                               })}
 
-                              {(item.archivedAt || item.status === 'archived') && (
+                              {item.archivedAt && (
                                 <div className="log-item done">
                                   <div className="log-text">Arquivado</div>
                                   <span className="log-date">
-                                    {item.archivedAt 
-                                      ? format(parseISO(item.archivedAt), "dd MMM yyyy HH:mm", { locale: ptBR })
-                                      : '-'}
+                                    {format(parseISO(item.archivedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
                                   </span>
                                 </div>
                               )}

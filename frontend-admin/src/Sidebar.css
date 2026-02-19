@@ -4,37 +4,10 @@
   border-right: 1px solid #eaecf0;
   display: flex;
   flex-direction: column;
-  padding: 32px 24px;
-  height: 100vh;
+  padding: 20px 24px;
+  height: 100%;
   box-sizing: border-box;
-  position: sticky;
-  top: 0;
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 48px;
-  padding-left: 8px;
-}
-
-.sidebar-logo {
-  width: 42px;
-  height: 42px;
-  transition: transform 0.2s;
-}
-
-.sidebar-logo:hover {
-  transform: scale(1.05);
-}
-
-.logo-text {
-  font-size: 20px;
-  font-weight: 700;
-  color: #111827;
-  letter-spacing: -0.5px;
-  font-family: 'Samsung Sharp Sans', 'Samsung Sharp', sans-serif;
+  /* position: sticky; removed as it's not needed in flex layout */
 }
 
 .nav-menu {
