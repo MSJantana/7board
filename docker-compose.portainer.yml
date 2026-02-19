@@ -13,10 +13,10 @@ services:
           server backend:${BACKEND_PORT:-3001};
       }
       upstream frontend {
-          server frontend:5173;
+          server frontend:80;
       }
       upstream frontend_admin {
-          server frontend-admin:5174;
+          server frontend-admin:80;
       }
       server {
           listen 80;
