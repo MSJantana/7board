@@ -200,7 +200,7 @@ export function Dashboard() {
   // Pure async function to fetch data (defined inside or outside, but used to decouple)
   const fetchCardsData = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/cards');
+      const response = await axios.get('/api/cards');
       return response.data.map((item: Solicitacao) => ({
         ...item,
         id: String(item.id), // Ensure ID is a string for DnD
@@ -279,7 +279,7 @@ export function Dashboard() {
     ));
 
     try {
-      await axios.put(`http://localhost:3001/api/cards/${activeId}/status`, { status: destinationStatus, observacoes: newObs });
+      await axios.put(`/api/cards/${activeId}/status`, { status: destinationStatus, observacoes: newObs });
       toast.success('Status atualizado!');
     } catch (error) {
       console.error('Error updating status:', error);
@@ -348,7 +348,7 @@ export function Dashboard() {
 
              const updateStatus = async () => {
                 try {
-                  await axios.put(`http://localhost:3001/api/cards/${id}/status`, { status: toStatus, observacoes: newObs });
+                  await axios.put(`/api/cards/${id}/status`, { status: toStatus, observacoes: newObs });
                   toast.success(`Status atualizado com sucesso!`);
                   setSelectedCard(null); // Close modal on success
                 } catch (error) {

@@ -166,7 +166,7 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
             <div className="form-section">
               <label htmlFor="anexos-display">Anexos</label>
               <a 
-                href={`http://localhost:3001${card.arquivoUrl}`} 
+                href={card.arquivoUrl || '#'} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="attachment-link"

@@ -39,7 +39,7 @@ export function ArquivadosList() {
   };
 
   const fetchSolicitacoes = async () => {
-    const response = await axios.get('http://localhost:3001/api/cards');
+    const response = await axios.get('/api/cards');
     // Ensure veiculacao is parsed correctly if needed, though mostly display string here
     return response.data.map((item: Solicitacao) => ({
       ...item,
@@ -249,7 +249,7 @@ export function ArquivadosList() {
                               <div className="detail-item">
                                 <span className="detail-label">Anexo</span>
                                 <div className="detail-value">
-                                  <a href={`http://localhost:3001${item.arquivoUrl}`} target="_blank" rel="noopener noreferrer" className="file-link">
+                                  <a href={`${item.arquivoUrl}`} target="_blank" rel="noopener noreferrer" className="file-link">
                                     <span className="material-icons" style={{fontSize: '16px'}}>attach_file</span>{' '}
                                     Ver Arquivo
                                   </a>

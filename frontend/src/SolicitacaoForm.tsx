@@ -123,7 +123,7 @@ export function SolicitacaoForm() {
       data.append('arquivo', arquivo);
     }
 
-    axios.post('http://localhost:3001/api/cards', data, {
+    axios.post('/api/cards', data, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
