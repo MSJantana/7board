@@ -171,7 +171,7 @@ export function SolicitacaoForm() {
             <div className="form-column">
               <div className="form-group">
                 <label htmlFor="departamento">
-                  <span className="material-icons">business</span>{' '}
+                  <span className="material-symbols-rounded">apartment</span>{' '}
                   Departamento
                 </label>
                 <p className="helper-text">Selecione abaixo o departamento.</p>
@@ -204,7 +204,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <label htmlFor="email">
-                  <span className="material-icons">email</span>{' '}
+                  <span className="material-symbols-rounded">mail</span>{' '}
                   Email do Solicitante
                 </label>
                 <p className="helper-text">Seu email para receber confirmação.</p>
@@ -222,7 +222,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <div className="group-label">
-                  <span className="material-icons">category</span>{' '}
+                  <span className="material-symbols-rounded">category</span>{' '}
                   Tipo de solicitação e prazos (peça com antecedência)
                 </div>
                 <p className="helper-text">Selecione o tipo de serviço que você precisa:</p>
@@ -246,7 +246,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <div className="group-label">
-                  <span className="material-icons">share</span>{' '}
+                  <span className="material-symbols-rounded">share</span>{' '}
                   Onde irá veicular
                 </div>
                 <p className="helper-text">Onde essa mídia será publicada/utilizada?</p>
@@ -279,7 +279,7 @@ export function SolicitacaoForm() {
             <div className="form-column">
               <div className="form-group">
                 <label htmlFor="descricao">
-                  <span className="material-icons">description</span>{' '}
+                  <span className="material-symbols-rounded">description</span>{' '}
                   Descreva a sua solicitação
                 </label>
                 <p className="helper-text">Descreva o máximo possível.</p>
@@ -297,7 +297,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <label>
-                  <span className="material-icons">event</span>{' '}
+                  <span className="material-symbols-rounded">event</span>{' '}
                   Data e Hora de Entrega
                 </label>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -325,7 +325,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <label htmlFor="anexo">
-                  <span className="material-icons">attach_file</span>{' '}
+                  <span className="material-symbols-rounded">attach_file</span>{' '}
                   Anexos
                 </label>
                 <div className="file-upload-wrapper">
@@ -339,12 +339,12 @@ export function SolicitacaoForm() {
                     accept="image/*,.pdf,.doc,.docx"
                   />
                 </div>
-                <p className="helper-text" style={{ marginTop: '8px' }}>Formatos: Imagens, PDF, Word</p>
+                <p className="helper-text" style={{ marginTop: '8px' }}>Formatos: Imagens, PDF, Word - Envio Max 50MB</p>
               </div>
 
               <div className="form-group">
                 <label htmlFor="observacoes">
-                  <span className="material-icons">comment</span>{' '}
+                  <span className="material-symbols-rounded">chat_bubble</span>{' '}
                   Observações
                 </label>
                 <p className="helper-text">Mais alguma observação?</p>
@@ -362,7 +362,7 @@ export function SolicitacaoForm() {
             
             <div className="form-actions">
               <button type="submit" className="submit-btn">
-                <span className="material-icons" style={{ marginRight: '8px', fontSize: '18px' }}>send</span>{' '}
+                <span className="material-symbols-rounded" style={{ marginRight: '8px', fontSize: '18px' }}>send</span>{' '}
                 Enviar Solicitação
               </button>
               <p className="security-notice">
