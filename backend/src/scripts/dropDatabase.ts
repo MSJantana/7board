@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import { expand } from 'dotenv-expand';
 import mariadb from 'mariadb';
+import path from 'path';
+import { spawn } from 'child_process';
 
 const myEnv = dotenv.config();
 expand(myEnv);
@@ -48,10 +50,58 @@ async function main() {
     if (conn) await conn.end();
     await pool.end();
   }
+
+  const backendRoot = findBackendRoot();
+  await runPrismaGenerate(backendRoot);
+  await runPrismaDbPush(backendRoot);
+  console.log('Schema Prisma aplicado com sucesso.');
+}
+
+function findBackendRoot(): string {
+  const candidates = [
+    process.cwd(),
+    path.resolve(__dirname, '..', '..'),
+  ];
+  for (const cwd of candidates) {
+    if (cwd.toLowerCase().endsWith(path.sep + 'backend') || cwd.toLowerCase().includes(`${path.sep}backend`)) {
+      return cwd;
+    }
+  }
+  return process.cwd();
+}
+
+function prismaBin(cwd: string): string {
+  const isWin = process.platform === 'win32';
+  const bin = path.join(cwd, 'node_modules', '.bin', isWin ? 'prisma.cmd' : 'prisma');
+  return bin;
+}
+
+async function runPrismaGenerate(cwd: string): Promise<void> {
+  await execPrisma(['generate'], cwd);
+}
+
+async function runPrismaDbPush(cwd: string): Promise<void> {
+  await execPrisma(['db', 'push'], cwd);
+}
+
+function execPrisma(args: string[], cwd: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const bin = prismaBin(cwd);
+    const child = spawn(bin, args, {
+      cwd,
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL || '' },
+      stdio: 'inherit',
+      shell: false,
+    });
+    child.on('exit', (code) => {
+      if (code === 0) return resolve();
+      reject(new Error(`Prisma command failed with code ${code}`));
+    });
+    child.on('error', (err) => reject(err));
+  });
 }
 
 main().catch((err) => {
   console.error('Erro ao dropar/criar banco:', err);
   process.exit(1);
 });
-

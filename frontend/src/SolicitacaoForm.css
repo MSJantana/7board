@@ -31,12 +31,34 @@
 .sidebar-info {
   background-color: #f1f5f9; /* Slate 100 */
   width: 280px; /* Reduced width */
-  padding: 24px; /* Reduced padding */
+  padding: 32px 24px 24px; /* Top padding increased */
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* Stick content to top */
+  align-items: center; /* Center horizontally */
   border-right: 1px solid var(--border-color);
   flex-shrink: 0;
+}
+
+.sidebar-logo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 8px auto 16px; /* Center with slight top margin */
+}
+
+.sidebar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sidebar-logo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .logo-placeholder {
@@ -45,6 +67,7 @@
   color: var(--primary-color);
   margin-bottom: 16px; /* Reduced margin */
   letter-spacing: -1px;
+  text-align: center;
 }
 
 .sidebar-info h2 {

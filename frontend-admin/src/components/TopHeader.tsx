@@ -1,7 +1,54 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Logo } from './Logo';
 import { useNotifications } from '../hooks/useNotifications';
 import './TopHeader.css';
+
+type Notification = {
+  id: string;
+  read: boolean;
+  user: string;
+  action: string;
+  target?: string;
+  time: string;
+};
+
+const ANIMATION_MS = 400;
+
+type NotificationItemProps = Readonly<{
+  notification: Readonly<Notification>;
+  animating: boolean;
+  onClick: (id: string) => void;
+}>;
+
+function NotificationItem({
+  notification,
+  animating,
+  onClick,
+}: NotificationItemProps) {
+  return (
+    <button
+      key={notification.id}
+      className={`notification-item ${notification.read ? '' : 'unread'} ${animating ? 'read-animating' : ''}`}
+      onClick={() => onClick(notification.id)}
+      aria-label={`Marcar notificação de ${notification.user} como lida`}
+    >
+      <div className="user-avatar-placeholder">
+        <span className="material-icons">assignment</span>
+      </div>
+      <div className="notification-content">
+        <div className="notification-header-row">
+          <p className="notification-text">
+            <span className="user-name">{notification.user}</span>
+            <span className="action-text">{notification.action}</span>
+            {notification.target && <span className="target-text">{notification.target}</span>}
+            {!notification.read && <span className="unread-dot">●</span>}
+          </p>
+          <span className="notification-time">{notification.time}</span>
+        </div>
+      </div>
+    </button>
+  );
+}
 
 export function TopHeader() {
   const { notifications, markAllAsRead, markAsRead } = useNotifications();
@@ -14,22 +61,26 @@ export function TopHeader() {
   const todayNotifications = notifications.filter(n => n.isToday);
   const previousNotifications = notifications.filter(n => !n.isToday);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowNotifications(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+  const onDocumentMouseDown = useCallback((event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setShowNotifications(false);
+    }
   }, []);
+
+  useEffect(() => {
+    document.addEventListener('mousedown', onDocumentMouseDown);
+    return () => document.removeEventListener('mousedown', onDocumentMouseDown);
+  }, [onDocumentMouseDown]);
+
+  const toggleNotifications = () => {
+    setShowNotifications(prev => !prev);
+  };
 
   const handleMarkAllRead = () => {
     const idsToAnimate = notifications.filter(n => !n.read).map(n => n.id);
     if (idsToAnimate.length > 0) {
       setAnimatingIds(idsToAnimate);
-      setTimeout(() => setAnimatingIds([]), 400);
+      setTimeout(() => setAnimatingIds([]), ANIMATION_MS);
     }
     markAllAsRead();
   };
@@ -38,6 +89,17 @@ export function TopHeader() {
     markAllAsRead();
     setShowNotifications(false);
   };
+
+  const handleNotificationClick = (id: string) => {
+    setAnimatingIds(prev => [...prev, id]);
+    setTimeout(() => {
+      setAnimatingIds(prev => prev.filter(x => x !== id));
+    }, ANIMATION_MS);
+    markAsRead(id);
+  };
+
+  const setTabToday = () => setActiveTab('today');
+  const setTabPrevious = () => setActiveTab('previous');
 
   const filteredNotifications = activeTab === 'today' 
     ? todayNotifications 
@@ -55,7 +117,7 @@ export function TopHeader() {
         <div className="notification-wrapper" ref={dropdownRef}>
           <button 
             className={`system-icon-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={toggleNotifications}
           >
             {unreadCount > 0 ? (
               <span className="material-symbols-outlined">notification_important</span>
@@ -82,14 +144,14 @@ export function TopHeader() {
               <div className="dropdown-tabs">
                 <button 
                   className={`tab-btn ${activeTab === 'today' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('today')}
+                  onClick={setTabToday}
                 >
                   Hoje
                   <span className="tab-count">{todayNotifications.length}</span>
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'previous' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('previous')}
+                  onClick={setTabPrevious}
                 >
                   Anteriores
                   <span className="tab-count">{previousNotifications.length}</span>
@@ -100,34 +162,13 @@ export function TopHeader() {
                 {filteredNotifications.length === 0 ? (
                   <div className="empty-state">Nenhuma notificação</div>
                 ) : (
-                  filteredNotifications.map(notification => (
-                    <button 
-                      key={notification.id} 
-                      className={`notification-item ${notification.read ? '' : 'unread'} ${animatingIds.includes(notification.id) ? 'read-animating' : ''}`}
-                      onClick={() => {
-                        setAnimatingIds(prev => [...prev, notification.id]);
-                        setTimeout(() => {
-                          setAnimatingIds(prev => prev.filter(id => id !== notification.id));
-                        }, 400);
-                        markAsRead(notification.id);
-                      }}
-                      aria-label={`Marcar notificação de ${notification.user} como lida`}
-                    >
-                      <div className="user-avatar-placeholder">
-                        <span className="material-icons">assignment</span>
-                      </div>
-                      <div className="notification-content">
-                        <div className="notification-header-row">
-                          <p className="notification-text">
-                            <span className="user-name">{notification.user}</span>
-                            {' '}{notification.action}{' '}
-                            {notification.target && <span className="target-text">{notification.target}</span>}
-                            {!notification.read && <span className="unread-dot">●</span>}
-                          </p>
-                          <span className="notification-time">{notification.time}</span>
-                        </div>
-                      </div>
-                    </button>
+                  filteredNotifications.map(n => (
+                    <NotificationItem
+                      key={n.id}
+                      notification={n}
+                      animating={animatingIds.includes(n.id)}
+                      onClick={handleNotificationClick}
+                    />
                   ))
                 )}
               </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Logo7B } from './components/Logo7B';
+import { ASRSLogo } from './components/ASRSLogo';
 import './SolicitacaoForm.css';
 
 const TIPOS_SOLICITACAO = [
@@ -107,6 +108,12 @@ export function SolicitacaoForm() {
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
+
+    const today = new Date().toISOString().split('T')[0];
+    if (formData.dataEntrega && formData.dataEntrega < today) {
+      toast.error('Data Inválida: a data de entrega não pode ser anterior à data de hoje.');
+      return;
+    }
     
     const data = new FormData();
     data.append('departamento', formData.departamento);
@@ -152,8 +159,9 @@ export function SolicitacaoForm() {
   return (
     <div className="solicitacao-container">
       <div className="sidebar-info">
-        <div className="logo-placeholder">ASRS+</div>
-        <h2>Solicitações de Marketing - Midia ASR</h2>
+        <div className="sidebar-logo"><ASRSLogo /></div>
+        <div className="logo-placeholder">ASRS</div>
+        <h2>Solicitações de Marketing - Midia ASRS</h2>
         <p>Utilize este formulário para abrir solicitações para a equipe de marketing!</p>
       </div>
       
@@ -176,11 +184,21 @@ export function SolicitacaoForm() {
                   className="form-control"
                 >
                   <option value="">Escolha uma opção</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Vendas">Vendas</option>
-                  <option value="RH">RH</option>
-                  <option value="Financeiro">Financeiro</option>
-                  <option value="Outros">Outros</option>
+                  <option value="Educação">Educação</option>
+                  <option value="Evangelismo/MG">Evangelismo/MG</option>
+                  <option value="IntegraRH">IntegraRH</option>
+                  <option value="JA/Com/Mus/Univ/MAP">JA/Com/Mus/Univ/MAP</option>
+                  <option value="MCA">MCA</option>
+                  <option value="MDA">MDA</option>
+                  <option value="Ministerial e Família">Ministerial e Família</option>
+                  <option value="MIPES/Esc. Sabatina/ASA">MIPES/Esc. Sabatina/ASA</option>
+                  <option value="Mordomia e Saúde">Mordomia e Saúde</option>
+                  <option value="Mulher/AFAM">Mulher/AFAM</option>
+                  <option value="Nutrição">Nutrição</option>
+                  <option value="Publicações/EP">Publicações/EP</option>
+                  <option value="Secretaria">Secretaria</option>
+                  <option value="Tesouraria">Tesouraria</option>
+                  <option value="Outros">Outros (Especificar na observação)</option>
                 </select>
               </div>
 
@@ -286,6 +304,7 @@ export function SolicitacaoForm() {
                     name="dataEntrega"
                     value={formData.dataEntrega}
                     onChange={handleInputChange}
+                    min={new Date().toISOString().split('T')[0]}
                     required
                     className="form-control"
                     style={{ flex: 1 }}

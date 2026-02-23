@@ -144,10 +144,21 @@ export function ArquivadosList() {
             onChange={(e) => { setFilterDept(e.target.value); setCurrentPage(1); }}
           >
             <option value="">Todos Departamentos</option>
-            <option value="Marketing">Marketing</option>
-            <option value="Vendas">Vendas</option>
-            <option value="RH">RH</option>
-            <option value="Financeiro">Financeiro</option>
+            <option value="Educação">Educação</option>
+            <option value="Evangelismo/MG">Evangelismo/MG</option>
+            <option value="IntegraRH">IntegraRH</option>
+            <option value="JA/Com/Mus/Univ/MAP">JA/Com/Mus/Univ/MAP</option>
+            <option value="MCA">MCA</option>
+            <option value="MDA">MDA</option>
+            <option value="Ministerial e Família">Ministerial e Família</option>
+            <option value="MIPES/Esc. Sabatina/ASA">MIPES/Esc. Sabatina/ASA</option>
+            <option value="Mordomia e Saúde">Mordomia e Saúde</option>
+            <option value="Mulher/AFAM">Mulher/AFAM</option>
+            <option value="Nutrição">Nutrição</option>
+            <option value="Publicações/EP">Publicações/EP</option>
+            <option value="Secretaria">Secretaria</option>
+            <option value="Tesouraria">Tesouraria</option>
+            <option value="Outros">Outros (Especificar na observação)</option>               
           </select>
         </div>
 
