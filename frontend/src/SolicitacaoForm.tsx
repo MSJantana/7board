@@ -18,8 +18,7 @@ const TIPOS_SOLICITACAO = [
 
 const OPCOES_VEICULACAO = [
   'Digital',
-  'Impresso',
-  'Outro'
+  'Impresso' 
 ];
 
 export function SolicitacaoForm() {

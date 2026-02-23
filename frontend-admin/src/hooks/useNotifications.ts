@@ -45,7 +45,7 @@ export function useNotifications() {
   // Pure data fetching function - DOES NOT set state
   const fetchNotificationsData = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/cards');
+      const response = await axios.get('/api/cards');
       const cards: Solicitacao[] = response.data;
       
       const newCards = cards.filter(card => card.status === 'todo');
@@ -92,7 +92,7 @@ export function useNotifications() {
     };
 
     loadData();
-    const interval = setInterval(loadData, 10000); // Poll every 10s
+    const interval = setInterval(loadData, 5000); // Poll every 5s
     
     return () => {
       isMounted = false;
