@@ -176,6 +176,7 @@ export function SolicitacaoForm() {
                 </label>
                 <p className="helper-text">Selecione abaixo o departamento.</p>
                 <select 
+                  id="departamento"
                   name="departamento" 
                   value={formData.departamento} 
                   onChange={handleInputChange} 
@@ -208,6 +209,7 @@ export function SolicitacaoForm() {
                 </label>
                 <p className="helper-text">Seu email para receber confirmação.</p>
                 <input
+                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -219,10 +221,10 @@ export function SolicitacaoForm() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="tipoSolicitacao">
+                <div className="group-label">
                   <span className="material-icons">category</span>{' '}
                   Tipo de solicitação e prazos (peça com antecedência)
-                </label>
+                </div>
                 <p className="helper-text">Selecione o tipo de serviço que você precisa:</p>
                 <div className="radio-group">
                   {TIPOS_SOLICITACAO.map(tipo => (
@@ -243,10 +245,10 @@ export function SolicitacaoForm() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="veiculacao">
+                <div className="group-label">
                   <span className="material-icons">share</span>{' '}
                   Onde irá veicular
-                </label>
+                </div>
                 <p className="helper-text">Onde essa mídia será publicada/utilizada?</p>
                 <div className="checkbox-group">
                   <div className="checkbox-item">
@@ -282,6 +284,7 @@ export function SolicitacaoForm() {
                 </label>
                 <p className="helper-text">Descreva o máximo possível.</p>
                 <textarea
+                  id="descricao"
                   name="descricao"
                   value={formData.descricao}
                   onChange={handleInputChange}
@@ -330,6 +333,7 @@ export function SolicitacaoForm() {
                     <span className="plus-icon">+</span> {arquivo ? arquivo.name : 'Adicionar anexo'}
                   </div>
                   <input 
+                    id="anexo"
                     type="file" 
                     onChange={handleFileChange} 
                     accept="image/*,.pdf,.doc,.docx"
@@ -345,6 +349,7 @@ export function SolicitacaoForm() {
                 </label>
                 <p className="helper-text">Mais alguma observação?</p>
                 <textarea
+                  id="observacoes"
                   name="observacoes"
                   value={formData.observacoes}
                   onChange={handleInputChange}

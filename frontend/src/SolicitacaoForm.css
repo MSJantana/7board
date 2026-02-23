@@ -154,6 +154,7 @@
   border-radius: 8px; /* Reduced radius */
   font-size: 0.9rem; /* Reduced size */
   background-color: #fff;
+  color: var(--text-main);
   transition: all 0.2s;
 }
 
