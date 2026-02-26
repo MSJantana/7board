@@ -105,12 +105,18 @@ export function SolicitacaoForm() {
     }));
   };
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const today = new Date().toISOString().split('T')[0];
     if (formData.dataEntrega && formData.dataEntrega < today) {
       toast.error('Data Inválida: a data de entrega não pode ser anterior à data de hoje.');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (formData.email && !emailRegex.test(formData.email)) {
+      toast.error('E-mail inválido: por favor verifique o endereço (ex: nome@dominio.com).');
       return;
     }
     
@@ -171,7 +177,7 @@ export function SolicitacaoForm() {
             <div className="form-column">
               <div className="form-group">
                 <label htmlFor="departamento">
-                  <span className="material-symbols-rounded">apartment</span>{' '}
+                  <span className="material-symbols-rounded" aria-hidden="true">apartment</span>{' '}
                   Departamento
                 </label>
                 <p className="helper-text">Selecione abaixo o departamento.</p>
@@ -227,20 +233,23 @@ export function SolicitacaoForm() {
                 </div>
                 <p className="helper-text">Selecione o tipo de serviço que você precisa:</p>
                 <div className="radio-group">
-                  {TIPOS_SOLICITACAO.map(tipo => (
-                    <div key={tipo} className="radio-item">
-                      <input
-                        type="radio"
-                        id={tipo}
-                        name="tipoSolicitacao"
-                        value={tipo}
-                        checked={formData.tipoSolicitacao === tipo}
-                        onChange={handleInputChange}
-                        required
-                      />
-                      <label htmlFor={tipo}>{tipo}</label>
-                    </div>
-                  ))}
+                  {TIPOS_SOLICITACAO.map((tipo, index) => {
+                    const safeId = `tipo-${index}`;
+                    return (
+                      <div key={tipo} className="radio-item">
+                        <input
+                          type="radio"
+                          id={safeId}
+                          name="tipoSolicitacao"
+                          value={tipo}
+                          checked={formData.tipoSolicitacao === tipo}
+                          onChange={handleInputChange}
+                          required
+                        />
+                        <label htmlFor={safeId}>{tipo}</label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -260,17 +269,20 @@ export function SolicitacaoForm() {
                     />
                     <label htmlFor="marcar-todos">Marcar todos</label>
                   </div>
-                  {OPCOES_VEICULACAO.map(option => (
-                    <div key={option} className="checkbox-item">
-                      <input
-                        type="checkbox"
-                        id={option}
-                        checked={formData.veiculacao.includes(option)}
-                        onChange={() => handleCheckboxChange(option)}
-                      />
-                      <label htmlFor={option}>{option}</label>
-                    </div>
-                  ))}
+                  {OPCOES_VEICULACAO.map((option, index) => {
+                    const safeId = `veiculacao-${index}`;
+                    return (
+                      <div key={option} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          id={safeId}
+                          checked={formData.veiculacao.includes(option)}
+                          onChange={() => handleCheckboxChange(option)}
+                        />
+                        <label htmlFor={safeId}>{option}</label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -279,7 +291,7 @@ export function SolicitacaoForm() {
             <div className="form-column">
               <div className="form-group">
                 <label htmlFor="descricao">
-                  <span className="material-symbols-rounded">description</span>{' '}
+                  <span className="material-symbols-rounded" aria-hidden="true">description</span>{' '}
                   Descreva a sua solicitação
                 </label>
                 <p className="helper-text">Descreva o máximo possível.</p>
@@ -297,7 +309,7 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <label>
-                  <span className="material-symbols-rounded">event</span>{' '}
+                  <span className="material-symbols-rounded" aria-hidden="true">event</span>{' '}
                   Data e Hora de Entrega
                 </label>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -362,7 +374,7 @@ export function SolicitacaoForm() {
             
             <div className="form-actions">
               <button type="submit" className="submit-btn">
-                <span className="material-symbols-rounded" style={{ marginRight: '8px', fontSize: '18px' }}>send</span>{' '}
+                <span className="material-symbols-rounded" style={{ marginRight: '8px', fontSize: '18px' }} aria-hidden="true">send</span>{' '}
                 Enviar Solicitação
               </button>
               <p className="security-notice">

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isValid, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type DragStartEvent, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { createPortal } from 'react-dom';
 import { CardDetailsModal } from './components/CardDetailsModal';
@@ -46,6 +46,37 @@ interface KanbanCardProps {
   onCardClick: (item: Solicitacao) => void;
 }
 
+const calculateCardStatus = (item: Solicitacao) => {
+  const deliveryDate = parseISO(item.dataEntrega);
+  let hoursLeft = 1000;
+  let isOverdue = false;
+  
+  if (isValid(deliveryDate)) {
+      const targetDate = deliveryDate;
+      if (item.horarioEntrega) {
+        const [h, m] = item.horarioEntrega.split(':').map(Number);
+        targetDate.setHours(h || 0, m || 0, 0, 0);
+      } else {
+        targetDate.setHours(23, 59, 59, 999);
+      }
+      isOverdue = new Date() > targetDate;
+      hoursLeft = differenceInHours(targetDate, new Date());
+  }
+  
+  const isActive = !['done', 'archived', 'concluido'].includes(item.status);
+  const isUrgent = hoursLeft < 24 && isActive;
+  const showOverdueCard = isOverdue && isActive;
+
+  let statusText = '';
+  if (showOverdueCard) {
+    statusText = 'Atrasada.';
+  } else if (isUrgent) {
+    statusText = 'Urgente.';
+  }
+
+  return { isUrgent, showOverdueCard, statusText };
+};
+
 const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCardProps & { isOverlay?: boolean }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
@@ -60,6 +91,8 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
     zIndex: isDragging || isOverlay ? 999 : 1,
   };
 
+  const { isUrgent, showOverdueCard, statusText } = calculateCardStatus(item);
+
   return (
     <button
       type="button"
@@ -67,14 +100,15 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
       style={style}
       {...listeners}
       {...attributes}
-      className={`kanban-card ${isDragging ? 'dragging' : ''} ${isOverlay ? 'overlay' : ''}`}
+      className={`kanban-card ${isDragging ? 'dragging' : ''} ${isOverlay ? 'overlay' : ''} ${showOverdueCard ? 'overdue' : ''}`}
       onClick={() => !isDragging && onCardClick(item)}
+      aria-label={`Solicitação ${item.tipoSolicitacao} para ${item.departamento}. ${statusText}`}
     >
       <div className="card-header">
          <span className={`dept-badge ${getDepartmentColorClass(item.departamento)}`}>
            {item.departamento}
          </span>
-         <span className="material-icons card-more">more_horiz</span>
+         <span className="material-icons card-more" aria-hidden="true">more_horiz</span>
       </div>
 
       <h4 className="card-title">{item.tipoSolicitacao}</h4>
@@ -83,6 +117,13 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
         {item.descricao}
       </div>
 
+      {showOverdueCard && (
+        <div className="card-alert" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#dc2626', fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>
+           <span className="material-icons" style={{ fontSize: '16px' }}>error</span>
+           Prazo vencido
+        </div>
+      )}
+
       <div className="card-footer">
          <div className="card-meta">
             {item.protocolo && (
@@ -90,14 +131,19 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
                 #{item.protocolo.split('-').pop()}
               </span>
             )}
-            <span className="meta-item date" title="Data de Entrega">
-              <span className="material-icons">event</span>
+            <span 
+              className="meta-item date" 
+              title={isUrgent ? "Data de Entrega (Urgente)" : "Data de Entrega"} 
+              style={{ color: isUrgent ? '#e74c3c' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal' }}
+              aria-label={isUrgent ? `Entrega urgente: ${format(parseISO(item.dataEntrega), "dd/MM/yyyy")}` : `Data de entrega: ${format(parseISO(item.dataEntrega), "dd/MM/yyyy")}`}
+            >
+              <span className="material-icons" style={{ color: isUrgent ? '#e74c3c' : 'inherit' }} aria-hidden="true">event</span>
               {format(parseISO(item.dataEntrega), "dd/MM/yyyy")}
             </span>
          </div>
          
          {item.arquivoUrl && (
-           <span className="material-icons attachment-icon">attach_file</span>
+           <span className="material-icons attachment-icon" aria-hidden="true">attach_file</span>
          )}
       </div>
     </button>
@@ -244,7 +290,8 @@ export function Dashboard() {
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
+    useSensor(KeyboardSensor)
   );
 
   const onDragStart = (event: DragStartEvent) => {

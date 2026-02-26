@@ -64,8 +64,8 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
             </div>
             <h3>Detalhes da Solicitação</h3>
           </div>
-          <button className="close-btn" onClick={onClose}>
-            <span className="material-icons">close</span>
+          <button className="close-btn" onClick={onClose} aria-label="Fechar modal">
+            <span className="material-icons" aria-hidden="true">close</span>
           </button>
         </div>
 

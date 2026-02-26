@@ -29,6 +29,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           className="pagination-btn" 
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
+          aria-label="Página anterior"
         >
           <span className="material-icons">chevron_left</span>
         </button>
@@ -48,6 +49,8 @@ export const Pagination: React.FC<PaginationProps> = ({
               key={pageNum}
               className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
               onClick={() => onPageChange(pageNum)}
+              aria-label={`Página ${pageNum}`}
+              aria-current={currentPage === pageNum ? 'page' : undefined}
             >
               {pageNum}
             </button>
@@ -58,6 +61,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           className="pagination-btn" 
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
+          aria-label="Próxima página"
         >
           <span className="material-icons">chevron_right</span>
         </button>

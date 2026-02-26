@@ -90,11 +90,13 @@ export function TopHeader() {
     setShowNotifications(false);
   };
 
+  const removeAnimatingId = (id: string) => {
+    setAnimatingIds(prev => prev.filter(x => x !== id));
+  };
+
   const handleNotificationClick = (id: string) => {
     setAnimatingIds(prev => [...prev, id]);
-    setTimeout(() => {
-      setAnimatingIds(prev => prev.filter(x => x !== id));
-    }, ANIMATION_MS);
+    setTimeout(() => removeAnimatingId(id), ANIMATION_MS);
     markAsRead(id);
   };
 
@@ -118,13 +120,20 @@ export function TopHeader() {
           <button 
             className={`system-icon-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
             onClick={toggleNotifications}
+            aria-label={unreadCount > 0 ? `${unreadCount} novas notificações` : "Notificações"}
+            aria-expanded={showNotifications}
+            aria-haspopup="true"
           >
             {unreadCount > 0 ? (
-              <span className="material-symbols-outlined">notification_important</span>
+              <span className="material-symbols-outlined" aria-hidden="true">notification_important</span>
             ) : (
-              <span className="material-icons">notifications</span>
+              <span className="material-icons" aria-hidden="true">notifications</span>
             )}
-            {unreadCount > 0 && <span className="system-notification-badge" />}
+            {unreadCount > 0 && (
+              <span className="system-notification-badge" aria-hidden="true">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {showNotifications && (
@@ -133,7 +142,7 @@ export function TopHeader() {
                 <h3>Notificações</h3>
                 <div className="dropdown-header-actions">
                   <button className="mark-read-btn" onClick={handleMarkAllRead}>
-                    <span className="material-icons">done_all</span> Marcar como lidas
+                    <span className="material-icons" aria-hidden="true">done_all</span> Marcar como lidas
                   </button>
                   <button className="clear-all-btn" onClick={handleClearAll}>
                     limpar todas
@@ -141,24 +150,28 @@ export function TopHeader() {
                 </div>
               </div>
 
-              <div className="dropdown-tabs">
+              <div className="dropdown-tabs" role="tablist">
                 <button 
                   className={`tab-btn ${activeTab === 'today' ? 'active' : ''}`}
                   onClick={setTabToday}
+                  role="tab"
+                  aria-selected={activeTab === 'today'}
+                  aria-controls="notification-list"
                 >
-                  Hoje
-                  <span className="tab-count">{todayNotifications.length}</span>
+                  Hoje <span className="tab-count">{todayNotifications.length}</span>
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'previous' ? 'active' : ''}`}
                   onClick={setTabPrevious}
+                  role="tab"
+                  aria-selected={activeTab === 'previous'}
+                  aria-controls="notification-list"
                 >
-                  Anteriores
-                  <span className="tab-count">{previousNotifications.length}</span>
+                  Anteriores <span className="tab-count">{previousNotifications.length}</span>
                 </button>
               </div>
 
-              <div className="notification-list">
+              <div className="notification-list" id="notification-list" role="tabpanel">
                 {filteredNotifications.length === 0 ? (
                   <div className="empty-state">Nenhuma notificação</div>
                 ) : (
@@ -176,12 +189,14 @@ export function TopHeader() {
           )}
         </div>
 
+        {/*
         <div className="user-info">
           <span className="user-email">joao.ferreira@exemplo.uk.org</span>
           <div className="user-avatar-small">
             <span className="material-icons" style={{fontSize: '20px', color: '#666'}}>person</span>
           </div>
         </div>
+        */}
       </div>
     </header>
   );

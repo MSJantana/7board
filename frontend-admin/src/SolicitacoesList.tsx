@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import axios from 'axios';
-import { format, parseISO, parse, isValid } from 'date-fns';
+import { format, parseISO, parse, isValid, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
@@ -186,18 +186,19 @@ export function SolicitacoesList() {
         </div>
 
         <div className="search-box">
-          <span className="material-icons search-icon">search</span>
+          <span className="material-icons search-icon" aria-hidden="true">search</span>
           <input 
             type="text" 
             className="search-input" 
             placeholder="Buscar por protocolo, descrição..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            aria-label="Buscar solicitações"
           />
         </div>
         
-        <button className="action-btn btn-primary" onClick={handleRefresh}>
-          <span className="material-icons">refresh</span> Atualizar
+        <button className="action-btn btn-primary" onClick={handleRefresh} aria-label="Atualizar lista">
+          <span className="material-icons" aria-hidden="true">refresh</span> Atualizar
         </button>
       </div>
 
@@ -214,17 +215,56 @@ export function SolicitacoesList() {
             </tr>
           </thead>
           <tbody>
-            {currentItems.map(item => (
-              <>
+            {currentItems.map(item => {
+              const deliveryDate = parseISO(item.dataEntrega);
+              let hoursLeft = 1000;
+              if (isValid(deliveryDate)) {
+                 const targetDate = deliveryDate;
+                 if (item.horarioEntrega) {
+                   const [h, m] = item.horarioEntrega.split(':').map(Number);
+                   targetDate.setHours(h || 0, m || 0, 0, 0);
+                 } else {
+                   targetDate.setHours(23, 59, 59, 999);
+                 }
+                 
+                 // If the target date is in the past, differenceInHours returns a negative number (e.g., -5).
+                 // If the target date is in the future, it returns a positive number (e.g., 5).
+                 // We want to highlight if it's less than 24 hours away (future) OR if it's overdue (past).
+                 // So hoursLeft < 24 covers both cases.
+                 // However, differenceInHours rounds down to full hours.
+                 // Let's use differenceInMinutes for more precision if needed, but hours is usually fine.
+                 // Wait, if target is NOW + 23h 59m, diffInHours is 23. 23 < 24 is true.
+                 // If target is NOW + 24h 01m, diffInHours is 24. 24 < 24 is false.
+                 // Correct.
+                 
+                 hoursLeft = differenceInHours(targetDate, new Date());
+              }
+              // Ensure we don't flag completed items
+              const isUrgent = hoursLeft < 24 && !['done', 'archived', 'concluido'].includes(item.status);
+              
+              // Debug logging (temporary, remove in prod)
+              // console.log(`Item ${item.id}: delivery=${item.dataEntrega} time=${item.horarioEntrega} hoursLeft=${hoursLeft} isUrgent=${isUrgent}`);
+
+              return (
+              <Fragment key={item.id}>
                 <tr 
-                  key={item.id} 
                   className={`row-clickable ${expandedId === item.id ? 'row-expanded' : ''}`}
                   onClick={() => toggleExpand(item.id)}
+                  tabIndex={0}
+                  aria-expanded={expandedId === item.id}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleExpand(item.id);
+                    }
+                  }}
                 >
                   <td>
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                      <span className="material-icons" style={{fontSize: '18px', color: '#00d1b2'}}>event</span>
-                      {format(parseISO(item.dataEntrega), "dd MMM yyyy", { locale: ptBR })}
+                      <span className="material-icons" style={{fontSize: '18px', color: isUrgent ? '#e74c3c' : '#00d1b2'}} aria-hidden="true">event</span>
+                      <span style={{color: isUrgent ? '#e74c3c' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal'}}>
+                        {format(parseISO(item.dataEntrega), "dd MMM yyyy", { locale: ptBR })}
+                      </span>
                     </div>
                     {item.horarioEntrega && <small style={{color: '#999', marginLeft: '26px'}}>{item.horarioEntrega}</small>}
                   </td>
@@ -312,27 +352,10 @@ export function SolicitacoesList() {
                                 </span>
                               </div>
                               
-                              {item.startedAt && (
-                                <div className="log-item production">
-                                  <div className="log-text">Fazendo</div>
-                                  <span className="log-date">
-                                    {format(parseISO(item.startedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
-                                  </span>
-                                </div>
-                              )}
-
-                              {item.completedAt && (
-                                <div className="log-item done">
-                                  <div className="log-text">Solicitação Concluída</div>
-                                  <span className="log-date">
-                                    {format(parseISO(item.completedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
-                                  </span>
-                                </div>
-                              )}
-
-                              {item.observacoes?.split('\n').map((line) => {
+                              {item.observacoes?.split('\n').map((line, index) => {
                                 const trimmed = line.trim();
                                 if (!trimmed.startsWith('[')) return null;
+                                const key = `${index}-${trimmed}`;
                                 const closeBracket = trimmed.indexOf(']');
                                 if (closeBracket <= 1) return null;
                                 const rawDate = trimmed.substring(1, closeBracket).trim();
@@ -372,7 +395,7 @@ export function SolicitacoesList() {
                                   })();
 
                                   return (
-                                    <div key={trimmed} className={`log-item ${cls}`}>
+                                    <div key={key} className={`log-item ${cls}`}>
                                       <div className="log-text">{displayText}</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -383,7 +406,7 @@ export function SolicitacoesList() {
                                 const lowerMsg = msg.toLowerCase();
                                 if (lowerMsg.includes('reaberta')) {
                                   return (
-                                    <div key={trimmed} className="log-item reopened">
+                                    <div key={key} className="log-item reopened">
                                       <div className="log-text">{msg}</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -391,7 +414,7 @@ export function SolicitacoesList() {
                                 }
                                 if (lowerMsg.includes('fazendo')) {
                                   return (
-                                    <div key={trimmed} className="log-item production">
+                                    <div key={key} className="log-item production">
                                       <div className="log-text">{msg}</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -399,7 +422,7 @@ export function SolicitacoesList() {
                                 }
                                 if (lowerMsg.includes('em produção')) {
                                   return (
-                                    <div key={trimmed} className="log-item production">
+                                    <div key={key} className="log-item production">
                                       <div className="log-text">Fazendo</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -407,7 +430,7 @@ export function SolicitacoesList() {
                                 }
                                 if (lowerMsg.includes('solicitação concluída')) {
                                   return (
-                                    <div key={trimmed} className="log-item done">
+                                    <div key={key} className="log-item done">
                                       <div className="log-text">{msg}</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -415,7 +438,7 @@ export function SolicitacoesList() {
                                 }
                                 if (lowerMsg.includes('arquivado')) {
                                   return (
-                                    <div key={trimmed} className="log-item done">
+                                    <div key={key} className="log-item done">
                                       <div className="log-text">{msg}</div>
                                       <span className="log-date">{displayDate}</span>
                                     </div>
@@ -424,15 +447,6 @@ export function SolicitacoesList() {
 
                                 return null;
                               })}
-
-                              {item.archivedAt && (
-                                <div className="log-item done">
-                                  <div className="log-text">Arquivado</div>
-                                  <span className="log-date">
-                                    {format(parseISO(item.archivedAt), "dd MMM yyyy HH:mm", { locale: ptBR })}
-                                  </span>
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -440,8 +454,9 @@ export function SolicitacoesList() {
                     </td>
                   </tr>
                 )}
-              </>
-            ))}
+              </Fragment>
+              );
+            })}
             
             {currentItems.length === 0 && (
               <tr>

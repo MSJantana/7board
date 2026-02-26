@@ -163,18 +163,19 @@ export function ArquivadosList() {
         </div>
 
         <div className="search-box">
-          <span className="material-icons search-icon">search</span>
+          <span className="material-icons search-icon" aria-hidden="true">search</span>
           <input 
             type="text" 
             className="search-input" 
             placeholder="Buscar por protocolo, descrição..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            aria-label="Buscar arquivos"
           />
         </div>
         
-        <button className="action-btn btn-primary" onClick={handleRefresh}>
-          <span className="material-icons">refresh</span> Atualizar
+        <button className="action-btn btn-primary" onClick={handleRefresh} aria-label="Atualizar lista">
+          <span className="material-icons" aria-hidden="true">refresh</span> Atualizar
         </button>
       </div>
 
@@ -197,10 +198,18 @@ export function ArquivadosList() {
                   key={item.id}  
                   className={`row-clickable ${expandedId === item.id ? 'row-expanded' : ''}`}
                   onClick={() => toggleExpand(item.id)}
+                  tabIndex={0}
+                  aria-expanded={expandedId === item.id}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      toggleExpand(item.id);
+                    }
+                  }}
                 >
                   <td>
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                      <span className="material-icons" style={{fontSize: '18px', color: '#64748b'}}>archive</span>
+                      <span className="material-icons" style={{fontSize: '18px', color: '#64748b'}} aria-hidden="true">archive</span>
                       {item.completedAt 
                         ? format(parseISO(item.completedAt), "dd MMM yyyy", { locale: ptBR })
                         : 'Data N/A'}

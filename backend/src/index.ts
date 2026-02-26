@@ -28,17 +28,18 @@ function ensurePrismaSchema() {
     return;
   }
   console.log('Sincronizando schema Prisma com o banco (db push)...');
-  const result = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'db', 'push'], {
+  const result = spawnSync('npx', ['prisma', 'db', 'push'], {
     cwd: path.join(__dirname, '..'),
     env: process.env,
-    stdio: 'inherit'
+    stdio: 'inherit',
+    shell: true
   });
   if (result.error) {
     console.error('Erro ao rodar prisma db push:', result.error);
-  } else if (result.status !== 0) {
-    console.error(`prisma db push retornou status ${result.status}`);
-  } else {
+  } else if (result.status === 0) {
     console.log('Schema sincronizado.');
+  } else {
+    console.error(`prisma db push retornou status ${result.status}`);
   }
 }
 

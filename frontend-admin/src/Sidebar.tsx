@@ -11,18 +11,18 @@ export function Sidebar() {
         <div className="nav-section">
           <ul>
             <li className={isActive('/')}>
-              <Link to="/" className="nav-link">
-                <span className="material-symbols-outlined icon">dashboard_customize</span> Dashboard
+              <Link to="/" className="nav-link" aria-current={location.pathname === '/' ? 'page' : undefined}>
+                <span className="material-symbols-outlined icon" aria-hidden="true">dashboard_customize</span> Dashboard
               </Link>
             </li>
             <li className={isActive('/solicitacoes')}>
-              <Link to="/solicitacoes" className="nav-link">
-                <span className="material-icons icon">list_alt</span> Solicitações
+              <Link to="/solicitacoes" className="nav-link" aria-current={location.pathname === '/solicitacoes' ? 'page' : undefined}>
+                <span className="material-icons icon" aria-hidden="true">list_alt</span> Solicitações
               </Link>
             </li>
             <li className={isActive('/arquivados')}>
-              <Link to="/arquivados" className="nav-link">
-                <span className="material-icons icon">archive</span> Arquivados
+              <Link to="/arquivados" className="nav-link" aria-current={location.pathname === '/arquivados' ? 'page' : undefined}>
+                <span className="material-icons icon" aria-hidden="true">archive</span> Arquivados
               </Link>
             </li>
           </ul>
