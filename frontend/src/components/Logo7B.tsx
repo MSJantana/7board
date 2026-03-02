@@ -1,6 +1,11 @@
 import React from 'react';
 
-export const Logo7B = ({ className, style }: { className?: string; style?: React.CSSProperties }) => {
+interface Logo7BProps {
+  readonly className?: string;
+  readonly style?: React.CSSProperties;
+}
+
+export const Logo7B = ({ className, style }: Logo7BProps) => {
   return (
     <img 
       src="/logo-midia-flowB.png" 

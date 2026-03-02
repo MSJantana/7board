@@ -55,3 +55,15 @@
 .pagination-btn .material-icons {
   font-size: 18px;
 }
+
+@media (max-width: 600px) {
+  .pagination-container {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+}

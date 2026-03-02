@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,20 +11,24 @@ import { ArquivadosList } from './ArquivadosList';
 
 import { TopHeader } from './components/TopHeader';
 
-const DashboardLayout = () => (
-  <div className="app-root">
-    <TopHeader />
-    <div className="app-body">
-      <Sidebar />
-      <div className="content-wrapper">
-        <Header />
-        <main className="main-content">
-          <Outlet />
-        </main>
+const DashboardLayout = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  return (
+    <div className="app-root">
+      <TopHeader onMenuClick={() => setIsSidebarOpen(true)} />
+      <div className="app-body">
+        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <div className="content-wrapper">
+          <Header />
+          <main className="main-content">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 function App() {
   return (

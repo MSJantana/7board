@@ -2,10 +2,10 @@ import React from 'react';
 import './Pagination.css';
 
 interface PaginationProps {
-  currentPage: number;
-  totalItems: number;
-  itemsPerPage: number;
-  onPageChange: (page: number) => void;
+  readonly currentPage: number;
+  readonly totalItems: number;
+  readonly itemsPerPage: number;
+  readonly onPageChange: (page: number) => void;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({

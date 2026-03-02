@@ -259,7 +259,7 @@ export function SolicitacoesList() {
                     }
                   }}
                 >
-                  <td>
+                  <td data-label="Data Entrega">
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <span className="material-icons" style={{fontSize: '18px', color: isUrgent ? '#e74c3c' : '#00d1b2'}} aria-hidden="true">event</span>
                       <span style={{color: isUrgent ? '#e74c3c' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal'}}>
@@ -268,15 +268,15 @@ export function SolicitacoesList() {
                     </div>
                     {item.horarioEntrega && <small style={{color: '#999', marginLeft: '26px'}}>{item.horarioEntrega}</small>}
                   </td>
-                  <td className="protocol-cell">{item.protocolo || '-'}</td>
-                  <td><span className="dept-badge">{item.departamento}</span></td>
-                  <td>{item.tipoSolicitacao}</td>
-                  <td>
+                  <td className="protocol-cell" data-label="Protocolo">{item.protocolo || '-'}</td>
+                  <td data-label="Departamento"><span className="dept-badge">{item.departamento}</span></td>
+                  <td data-label="Tipo">{item.tipoSolicitacao}</td>
+                  <td data-label="Status">
                     <span className={`status-badge ${getStatusClass(item.status)}`}>
                       {getStatusLabel(item.status)}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Ações">
                     <span className={`material-icons expand-icon ${expandedId === item.id ? 'open' : ''}`}>
                       expand_more
                     </span>

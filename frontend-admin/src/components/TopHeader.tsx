@@ -49,7 +49,7 @@ function NotificationItem({
   );
 }
 
-export function TopHeader() {
+export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }>) {
   const { notifications, markAllAsRead, markAsRead } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const [activeTab, setActiveTab] = useState<'today' | 'previous'>('today');
@@ -109,6 +109,13 @@ export function TopHeader() {
   return (
     <header className="top-system-header">
       <div className="system-left">
+        <button 
+          className="menu-btn" 
+          onClick={onMenuClick}
+          aria-label="Abrir menu"
+        >
+          <span className="material-icons">menu</span>
+        </button>
         <div className="system-logo-area">
           <img 
             src="/logo-midia-flow.png" 

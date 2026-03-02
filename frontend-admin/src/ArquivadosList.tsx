@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -193,9 +193,8 @@ export function ArquivadosList() {
           </thead>
           <tbody>
             {currentItems.map(item => (
-              <>
+              <Fragment key={item.id}>
                 <tr 
-                  key={item.id}  
                   className={`row-clickable ${expandedId === item.id ? 'row-expanded' : ''}`}
                   onClick={() => toggleExpand(item.id)}
                   tabIndex={0}
@@ -207,7 +206,7 @@ export function ArquivadosList() {
                     }
                   }}
                 >
-                  <td>
+                  <td data-label="Data Arquivamento">
                     <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                       <span className="material-icons" style={{fontSize: '18px', color: '#64748b'}} aria-hidden="true">archive</span>
                       {item.completedAt 
@@ -218,15 +217,15 @@ export function ArquivadosList() {
                        {format(parseISO(item.completedAt), "HH:mm")}
                     </small>}
                   </td>
-                  <td className="protocol-cell">{item.protocolo || '-'}</td>
-                  <td><span className="dept-badge">{item.departamento}</span></td>
-                  <td>{item.tipoSolicitacao}</td>
-                  <td>
+                  <td className="protocol-cell" data-label="Protocolo">{item.protocolo || '-'}</td>
+                  <td data-label="Departamento"><span className="dept-badge">{item.departamento}</span></td>
+                  <td data-label="Tipo">{item.tipoSolicitacao}</td>
+                  <td data-label="Status">
                     <span className={`status-badge ${getStatusClass(item.status)}`} style={{backgroundColor: '#64748b', color: 'white'}}>
                       {getStatusLabel(item.status)}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Ações">
                     <span className={`material-icons expand-icon ${expandedId === item.id ? 'open' : ''}`}>
                       expand_more
                     </span>
@@ -321,7 +320,7 @@ export function ArquivadosList() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
             
             {currentItems.length === 0 && (
