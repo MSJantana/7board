@@ -1,18 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Henny+Penny&display=swap');
 
 .top-system-header {
-  background-color: #0f2c5c; /* Dark blue from the image */
-  color: white;
-  height: 70px; /* Estimated height */
+  background-color: #213252; /* Dark blue background */
+  color: white; /* Light text for contrast */
+  height: 90px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 40px;
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
   z-index: 1000;
   position: relative;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Added shadow for separation */
 }
 
 .system-left {
@@ -23,12 +24,15 @@
 .system-logo-area {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 30px;
 }
 
 .system-logo-img {
-  width: 45px;
-  height: 45px;
+  width: auto;
+  height: 90px;
+  object-fit: contain;
+  position: relative;
+  top: 0px; /* Adjust logo position downwards */
 }
 
 .system-logo-text {
@@ -147,7 +151,7 @@
   height: 45px;
   border-radius: 50%;
   border: none;
-  background-color: #27416C; /* rgba(255, 255, 255, 0.1) on #0f2c5c */
+  background-color: rgba(255, 255, 255, 0.1);
   color: white;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -158,7 +162,7 @@
 .system-icon-btn:hover {
   background-color: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
 }
 
 .system-icon-btn:active {
@@ -226,7 +230,7 @@
   min-width: 16px;
   height: 16px;
   background-color: #D32F2F; /* Alterado de #ef4444 para melhor contraste com branco */
-  border: 1px solid #0f2c5c;
+  border: 1px solid #213252;
   border-radius: 10px;
   animation: badge-pulse 2s infinite;
   display: flex;

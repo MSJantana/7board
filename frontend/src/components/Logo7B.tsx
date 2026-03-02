@@ -1,53 +1,12 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 
 export const Logo7B = ({ className, style }: { className?: string; style?: React.CSSProperties }) => {
-  const svgData = useMemo(() => {
-    // Note: Converted React camelCase attributes back to standard SVG kebab-case for the data URI string
-    const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-        <defs>
-          <linearGradient id="bg" x1="40" y1="30" x2="220" y2="240" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#0B1630"/>
-            <stop offset="1" stop-color="#070E1E"/>
-          </linearGradient>
-
-          <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.25"/>
-          </filter>
-        </defs>
-
-        <rect x="18" y="18" width="220" height="220" rx="54" fill="url(#bg)" filter="url(#soft)"/>
-
-        <path d="M78 70 C94 58, 120 56, 140 60"
-              fill="none" stroke="#36C6FF" stroke-width="12"
-              stroke-linecap="round"/>
-
-        <g stroke-linecap="round" stroke-width="14" fill="none">
-          <path d="M78 112 H132" stroke="#36C6FF"/>
-          <path d="M78 138 H124" stroke="#22D3A6"/>
-          <path d="M78 164 H118" stroke="#A9A7FF"/>
-        </g>
-
-        <path d="M150 96 H194 L166 202"
-              fill="none" stroke="#FFFFFF" stroke-width="14"
-              stroke-linecap="round" stroke-linejoin="round"/>
-
-        <g fill="none" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.92">
-          <path d="M176 168 V206"/>
-          <path d="M176 170 H194 C206 170 206 186 194 186 H176"/>
-          <path d="M176 188 H196 C210 188 210 206 196 206 H176"/>
-        </g>
-      </svg>
-    `.trim();
-    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
-  }, []);
-
   return (
     <img 
-      src={svgData} 
-      alt="Logo 7B" 
+      src="/logo-midia-flowB.png" 
+      alt="Logo Mídia Flow B" 
       className={className}
-      style={{ width: 120, height: 120, ...style }}
+      style={{ width: 200, height: 200, objectFit: 'contain', ...style }}
     />
   );
 };

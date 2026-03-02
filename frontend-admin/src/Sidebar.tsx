@@ -28,6 +28,10 @@ export function Sidebar() {
           </ul>
         </div>
       </nav>
+      
+      <div className="sidebar-footer">
+        ASRS - Associação Sul do Rio Grande do Sul - 2026
+      </div>
     </aside>
   );
 }

@@ -120,7 +120,7 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
       {showOverdueCard && (
         <div className="card-alert" style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#dc2626', fontSize: '12px', marginTop: '8px', fontWeight: 600 }}>
            <span className="material-icons" style={{ fontSize: '16px' }}>error</span>
-           Prazo vencido
+           <span>Prazo vencido</span>
         </div>
       )}
 

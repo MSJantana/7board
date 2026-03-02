@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Logo } from './Logo';
 import { useNotifications } from '../hooks/useNotifications';
 import './TopHeader.css';
 
@@ -111,8 +110,11 @@ export function TopHeader() {
     <header className="top-system-header">
       <div className="system-left">
         <div className="system-logo-area">
-          <Logo className="system-logo-img" />
-          <span className="system-logo-text">Board</span>
+          <img 
+            src="/logo-midia-flow.png" 
+            alt="Logo Mídia Flow" 
+            className="system-logo-img" 
+          />
         </div>
       </div>
       <div className="system-right">

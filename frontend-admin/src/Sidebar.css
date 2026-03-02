@@ -79,3 +79,14 @@ li.active .nav-link {
 li.active .nav-link .icon {
   color: #2563eb;
 }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #eaecf0;
+  font-size: 11px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.4;
+  font-weight: 500;
+}

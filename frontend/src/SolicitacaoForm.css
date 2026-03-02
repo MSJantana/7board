@@ -310,9 +310,7 @@
   }
 
   .logo-7b-wrapper {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
+    display: none;
   }
 }
 
