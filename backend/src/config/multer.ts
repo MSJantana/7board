@@ -5,11 +5,16 @@ import fs from 'node:fs';
 // Configuração do Multer para Upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = 'uploads/';
+    // Define o caminho absoluto para a pasta de uploads na raiz do backend
+    // Assumindo que este arquivo está em src/config/multer.ts
+    const uploadPath = path.resolve(__dirname, '..', '..', 'uploads');
+    
     // Garantir que diretório existe
     if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath);
+      fs.mkdirSync(uploadPath, { recursive: true });
+      console.log(`Pasta criada: ${uploadPath}`);
     }
+    
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {

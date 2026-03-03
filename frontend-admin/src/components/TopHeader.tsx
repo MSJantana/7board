@@ -127,7 +127,7 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
       <div className="system-right">
         <div className="notification-wrapper" ref={dropdownRef}>
           <button 
-            className={`system-icon-btn ${unreadCount > 0 ? 'has-unread' : ''}`}
+            className={`system-icon-btn ${unreadCount > 0 ? 'has-unread animate-bell' : ''}`}
             onClick={toggleNotifications}
             aria-label={unreadCount > 0 ? `${unreadCount} novas notificações` : "Notificações"}
             aria-expanded={showNotifications}
