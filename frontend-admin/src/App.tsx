@@ -13,12 +13,18 @@ import { TopHeader } from './components/TopHeader';
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <div className="app-root">
       <TopHeader onMenuClick={() => setIsSidebarOpen(true)} />
       <div className="app-body">
-        <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <Sidebar 
+          isOpen={isSidebarOpen} 
+          onClose={() => setIsSidebarOpen(false)} 
+          isCollapsed={isCollapsed}
+          toggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        />
         <div className="content-wrapper">
           <Header />
           <main className="main-content">

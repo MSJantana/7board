@@ -179,3 +179,21 @@ export const updateCardStatus = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to update card status' });
   }
 };
+
+export const getCardById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const card = await prisma.solicitacao.findUnique({
+      where: { id: String(id) }
+    });
+    
+    if (!card) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+    
+    res.json(card);
+  } catch (error) {
+    console.error('Error fetching card details:', error);
+    res.status(500).json({ error: 'Failed to fetch card details' });
+  }
+};

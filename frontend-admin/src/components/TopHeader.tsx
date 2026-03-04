@@ -1,6 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 import { useNotifications } from '../hooks/useNotifications';
+import { CardDetailsModal } from './CardDetailsModal';
 import './TopHeader.css';
+
+interface Solicitacao {
+  id: string;
+  departamento: string;
+  email?: string;
+  protocolo?: string;
+  tipoSolicitacao: string;
+  descricao: string;
+  veiculacao: string[] | string;
+  dataEntrega: string;
+  horarioEntrega?: string;
+  observacoes?: string;
+  arquivoUrl?: string;
+  status: 'todo' | 'in-progress' | 'fazendo' | 'done' | 'archived' | 'video-materiais' | 'cobertura-eventos' | 'arte' | 'aprovacao' | 'parado';
+  createdAt: string;
+}
 
 type Notification = {
   id: string;
@@ -9,6 +28,7 @@ type Notification = {
   action: string;
   target?: string;
   time: string;
+  cardId?: string;
 };
 
 const ANIMATION_MS = 400;
@@ -55,6 +75,7 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
   const [activeTab, setActiveTab] = useState<'today' | 'previous'>('today');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [animatingIds, setAnimatingIds] = useState<string[]>([]);
+  const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const todayNotifications = notifications.filter(n => n.isToday);
@@ -93,10 +114,29 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
     setAnimatingIds(prev => prev.filter(x => x !== id));
   };
 
-  const handleNotificationClick = (id: string) => {
+  const handleNotificationClick = async (id: string, cardId?: string) => {
     setAnimatingIds(prev => [...prev, id]);
     setTimeout(() => removeAnimatingId(id), ANIMATION_MS);
     markAsRead(id);
+
+    if (cardId) {
+      try {
+        const response = await axios.get(`/api/cards/${cardId}`);
+        const cardData = response.data;
+        // Parse veiculacao if needed, similar to Dashboard logic
+        if (typeof cardData.veiculacao === 'string') {
+            try {
+                cardData.veiculacao = JSON.parse(cardData.veiculacao);
+            } catch {
+                // ignore
+            }
+        }
+        setSelectedCard(cardData);
+      } catch (error) {
+        console.error('Error fetching card details:', error);
+        toast.error('Erro ao carregar detalhes da solicitação.');
+      }
+    }
   };
 
   const setTabToday = () => setActiveTab('today');
@@ -189,7 +229,7 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
                       key={n.id}
                       notification={n}
                       animating={animatingIds.includes(n.id)}
-                      onClick={handleNotificationClick}
+                      onClick={(id) => handleNotificationClick(id, n.cardId)}
                     />
                   ))
                 )}
@@ -206,6 +246,25 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
           </div>
         </div>
         */}
+
+        {selectedCard && (
+          <CardDetailsModal
+            card={selectedCard}
+            onClose={() => setSelectedCard(null)}
+            onStatusChange={async (id, status) => {
+               // Update status via API
+               try {
+                 await axios.put(`/api/cards/${id}/status`, { status });
+                 toast.success('Status atualizado!');
+                 // Update local state to reflect change immediately in modal if needed
+                 setSelectedCard(prev => prev ? { ...prev, status: status as Solicitacao['status'] } : null);
+               } catch (error) {
+                 console.error('Error updating status:', error);
+                 toast.error('Erro ao atualizar status.');
+               }
+            }}
+          />
+        )}
       </div>
     </header>
   );
