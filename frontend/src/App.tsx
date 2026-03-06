@@ -3,16 +3,25 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { SolicitacaoForm } from './SolicitacaoForm';
+import { TopHeader } from './components/TopHeader';
 
 const PublicFormLayout = () => (
   <div className="public-form-layout" style={{ 
     minHeight: '100vh', 
     backgroundColor: '#f0f2f5', 
     display: 'flex', 
-    justifyContent: 'center', 
+    flexDirection: 'column',
     padding: '0' 
   }}>
-    <Outlet />
+    <TopHeader />
+    <div style={{ 
+      flex: 1, 
+      display: 'flex', 
+      justifyContent: 'center', 
+      padding: '40px 20px'
+    }}>
+      <Outlet />
+    </div>
   </div>
 );
 

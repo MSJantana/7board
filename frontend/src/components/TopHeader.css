@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Henny+Penny&display=swap');
+
+.top-system-header {
+  background-color: #213252; /* Dark blue background */
+  color: white; /* Light text for contrast */
+  height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  z-index: 1000;
+  position: relative;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* Added shadow for separation */
+}
+
+.system-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-btn {
+  display: none; /* Hidden on desktop */
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.system-logo-area {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.system-logo-img {
+  width: auto;
+  height: 90px;
+  object-fit: contain;
+  position: relative;
+  top: 0px; /* Adjust logo position downwards */
+}
+
+.system-logo-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Henny Penny', cursive, 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.system-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 13px;
+}
+
+.user-avatar-small {
+  width: 40px;
+  height: 40px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-avatar-small:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: #ffffff;
+}
+
+.user-avatar-small .material-icons {
+  font-size: 24px;
+  color: #213252; /* Dark blue to match header theme */
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .top-system-header {
+    padding: 0 16px;
+    height: 70px;
+  }
+  
+  .menu-btn {
+    display: flex;
+  }
+
+  .system-logo-img {
+    height: 60px;
+  }
+}

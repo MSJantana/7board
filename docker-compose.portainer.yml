@@ -7,6 +7,11 @@ services:
     ports:
       - "7080:80"
       - "7081:81"
+      # Uncomment lines below after setting up SSL certificates
+      # - "7443:443"
+      # - "7444:8443"
+    volumes:
+      - ./nginx/certs:/etc/nginx/certs:ro
     command: |
       /bin/sh -c 'cat << "EOF" > /etc/nginx/conf.d/default.conf
       client_max_body_size 50m;
@@ -44,6 +49,23 @@ services:
               proxy_pass http://frontend_admin;
           }
       }
+      # HTTPS Servers (Uncomment and ensure certs are present to enable)
+      # server {
+      #     listen 443 ssl;
+      #     ssl_certificate /etc/nginx/certs/fullchain.pem;
+      #     ssl_certificate_key /etc/nginx/certs/privkey.pem;
+      #     location /api/ { proxy_pass http://backend; proxy_set_header X-Forwarded-Proto https; }
+      #     location /uploads/ { proxy_pass http://backend; }
+      #     location / { proxy_pass http://frontend; proxy_set_header X-Forwarded-Proto https; }
+      # }
+      # server {
+      #     listen 8443 ssl;
+      #     ssl_certificate /etc/nginx/certs/fullchain.pem;
+      #     ssl_certificate_key /etc/nginx/certs/privkey.pem;
+      #     location /api/ { proxy_pass http://backend; proxy_set_header X-Forwarded-Proto https; }
+      #     location /uploads/ { proxy_pass http://backend; }
+      #     location / { proxy_pass http://frontend_admin; proxy_set_header X-Forwarded-Proto https; }
+      # }
       EOF
       nginx -g "daemon off;"'
     depends_on:
