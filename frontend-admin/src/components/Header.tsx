@@ -9,6 +9,7 @@ export function Header() {
       case '/': return 'Dashboard';
       case '/solicitacoes': return 'Solicitações';
       case '/arquivados': return 'Arquivados';
+      case '/usuarios': return 'Usuários';
       default: return 'Dashboard';
     }
   };

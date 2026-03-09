@@ -5,6 +5,8 @@ import { expand } from 'dotenv-expand';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import cardRoutes from './routes/cardRoutes';
+import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
 
 const myEnv = dotenv.config();
 expand(myEnv);
@@ -20,6 +22,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Use routes
 app.use('/api', cardRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 function ensurePrismaSchema() {
   const skip = String(process.env.PRISMA_SYNC_ON_START || '').toLowerCase() === 'false';

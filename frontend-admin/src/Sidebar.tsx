@@ -67,6 +67,12 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, toggleCollapse }
                 <span className="link-text">Arquivados</span>
               </Link>
             </li>
+            <li className={isActive('/usuarios')}>
+              <Link to="/usuarios" className="nav-link" onClick={handleLinkClick} aria-current={location.pathname === '/usuarios' ? 'page' : undefined} title={isCollapsed ? "Usuários" : ""}>
+                <span className="material-icons icon" aria-hidden="true">people</span> 
+                <span className="link-text">Usuários</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>

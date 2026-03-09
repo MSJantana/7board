@@ -28,3 +28,13 @@ model Solicitacao {
   completedAt     DateTime?
   archivedAt      DateTime?
 }
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

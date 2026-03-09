@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../context/AuthContext';
 import { CardDetailsModal } from './CardDetailsModal';
 import './TopHeader.css';
 
@@ -70,10 +71,13 @@ function NotificationItem({
 }
 
 export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }>) {
+  const { user, logout } = useAuth();
   const { notifications, markAllAsRead, markAsRead } = useNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState<'today' | 'previous'>('today');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
   const [animatingIds, setAnimatingIds] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
 
@@ -82,15 +86,29 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
   const previousNotifications = notifications.filter(n => !n.isToday);
 
   const onDocumentMouseDown = useCallback((event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
       setShowNotifications(false);
+    }
+    if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+      setShowUserDropdown(false);
+    }
+  }, []);
+
+  const onKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setShowNotifications(false);
+      setShowUserDropdown(false);
     }
   }, []);
 
   useEffect(() => {
     document.addEventListener('mousedown', onDocumentMouseDown);
-    return () => document.removeEventListener('mousedown', onDocumentMouseDown);
-  }, [onDocumentMouseDown]);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocumentMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onDocumentMouseDown, onKeyDown]);
 
   const toggleNotifications = () => {
     setShowNotifications(prev => !prev);
@@ -165,7 +183,7 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
         </div>
       </div>
       <div className="system-right">
-        <div className="notification-wrapper" ref={dropdownRef}>
+        <div className="notification-wrapper" ref={notificationRef}>
           <button 
             className={`system-icon-btn ${unreadCount > 0 ? 'has-unread animate-bell' : ''}`}
             onClick={toggleNotifications}
@@ -238,14 +256,33 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
           )}
         </div>
 
-        {/*
-        <div className="user-info">
-          <span className="user-email">joao.ferreira@exemplo.uk.org</span>
-          <div className="user-avatar-small">
-            <span className="material-icons" style={{fontSize: '20px', color: '#666'}}>person</span>
-          </div>
+        <div className="user-menu-wrapper" ref={userDropdownRef}>
+          <button 
+            className="user-info" 
+            onClick={() => setShowUserDropdown(!showUserDropdown)}
+            aria-label="Menu de usuário"
+            aria-haspopup="true"
+            aria-expanded={showUserDropdown}
+          >
+            <span className="user-name-display">{user ? user.name : 'Usuário'}</span>
+            <div className="user-avatar-small" title="Perfil">
+              <span className="material-icons">person</span>
+            </div>
+          </button>
+
+          {showUserDropdown && (
+            <div className="user-dropdown-menu" role="menu">
+              <div className="user-dropdown-header-content">
+                <div className="user-name-text">{user ? user.name : 'Usuário'}</div>
+                <div className="user-email-text">{user ? user.email : ''}</div>
+              </div>
+              <div className="user-dropdown-divider"></div>
+              <button className="user-dropdown-item" role="menuitem" onClick={logout}>
+                <span className="material-icons">logout</span> Sair
+              </button>
+            </div>
+          )}
         </div>
-        */}
 
         {selectedCard && (
           <CardDetailsModal

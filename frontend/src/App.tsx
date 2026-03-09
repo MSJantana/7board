@@ -4,6 +4,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 import { SolicitacaoForm } from './SolicitacaoForm';
 import { TopHeader } from './components/TopHeader';
+import { AuthProvider } from './context/AuthContext';
+import { Login } from './pages/Login';
 
 const PublicFormLayout = () => (
   <div className="public-form-layout" style={{ 
@@ -27,8 +29,10 @@ const PublicFormLayout = () => (
 
 function App() {
   return (
-    <>
+    <AuthProvider>
       <Routes>
+        <Route path="/login" element={<Login />} />
+        
         {/* Redirecionamento da raiz e rotas desconhecidas para /solicitacoes */}
         <Route path="/" element={<Navigate to="/solicitacoes" replace />} />
         <Route path="*" element={<Navigate to="/solicitacoes" replace />} />
@@ -44,7 +48,7 @@ function App() {
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
-    </>
+    </AuthProvider>
   );
 }
 

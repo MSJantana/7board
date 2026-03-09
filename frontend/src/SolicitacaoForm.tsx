@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Logo7B } from './components/Logo7B';
 import { ASRSLogo } from './components/ASRSLogo';
 import './SolicitacaoForm.css';
 
@@ -303,7 +302,7 @@ export function SolicitacaoForm() {
                   placeholder="Digite aqui ..."
                   required
                   className="form-control"
-                  rows={4}
+                  rows={3}
                 />
               </div>
 
@@ -367,25 +366,22 @@ export function SolicitacaoForm() {
                   onChange={handleInputChange}
                   placeholder="Digite aqui ..."
                   className="form-control"
-                  rows={3}
+                  rows={2}
                 />
               </div>
-            </div>
-            
-            <div className="form-actions">
-              <button type="submit" className="submit-btn">
-                <span className="material-symbols-rounded" style={{ marginRight: '8px', fontSize: '18px' }} aria-hidden="true">send</span>{' '}
-                Enviar Solicitação
-              </button>
-              <p className="security-notice">
-                Nunca envie senhas ou dados confidenciais por meio de formulários desconhecidos. Certifique-se de que este formulário foi gerado por sua empresa ou por uma empresa confiável.
-              </p>
+
+              <div className="form-actions">
+                <button type="submit" className="submit-btn">
+                  <span className="material-symbols-rounded" style={{ marginRight: '8px', fontSize: '16px' }} aria-hidden="true">send</span>{' '}
+                  Enviar Solicitação
+                </button>
+                <p className="security-notice">
+                  Nunca envie senhas ou dados confidenciais por meio de formulários desconhecidos. Certifique-se de que este formulário foi gerado por sua empresa ou por uma empresa confiável.
+                </p>
+              </div>
             </div>
           </div>
         </form>
-      </div>
-      <div className="logo-7b-wrapper">
-        <Logo7B />
       </div>
     </div>
   );

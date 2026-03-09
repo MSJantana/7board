@@ -18,20 +18,19 @@
   background-color: var(--card-bg);
   /* Full screen layout */
   width: 100%;
-  height: 100vh;
+  /* min-height removed to allow content to dictate height */
   margin: 0;
   border: none;
   border-radius: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  overflow: hidden; /* Prevent page scroll */
   position: relative;
 }
 
 /* Sidebar Styling - Compact */
 .sidebar-info {
   background-color: #f1f5f9; /* Slate 100 */
-  width: 280px; /* Reduced width */
-  padding: 32px 24px 24px; /* Top padding increased */
+  width: 260px; /* Reduced width */
+  padding: 24px 20px; /* Reduced padding */
   display: flex;
   flex-direction: column;
   justify-content: flex-start; /* Stick content to top */
@@ -41,8 +40,8 @@
 }
 
 .sidebar-logo {
-  width: 110px;
-  height: 110px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   overflow: hidden;
   margin: 8px auto 16px; /* Center with slight top margin */
@@ -88,8 +87,8 @@
 /* Form Content Area - Compact */
 .form-content {
   flex: 1;
-  padding: 24px; /* Reduced padding */
-  overflow-y: auto;
+  padding: 20px; /* Reduced padding */
+  padding-bottom: 20px; /* Restore padding but let container handle height */
   /* Custom scrollbar for webkit */
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
@@ -111,7 +110,8 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px; /* Reduced gap */
+  column-gap: 24px; /* Reduced gap */
+  row-gap: 8px; /* Reduced vertical gap to bring button closer */
   max-width: 100%; /* Ensure it fits */
   margin: 0 auto;
 }
@@ -125,7 +125,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px; /* Reduced gap */
+  gap: 4px; /* Reduced gap */
 }
 
 .form-group label {
@@ -175,10 +175,10 @@
 }
 
 .form-control {
-  padding: 10px 12px; /* Reduced padding */
+  padding: 8px 10px; /* Reduced padding */
   border: 1px solid var(--border-color);
   border-radius: 8px; /* Reduced radius */
-  font-size: 0.9rem; /* Reduced size */
+  font-size: 0.85rem; /* Reduced size */
   background-color: #fff;
   color: var(--text-main);
   transition: all 0.2s;
@@ -194,25 +194,29 @@
 .radio-group, .checkbox-group {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Reduced gap */
-  margin-top: 4px; /* Reduced margin */
+  gap: 6px; /* Reduced gap */
+  margin-top: 2px; /* Reduced margin */
 }
 
 .radio-item, .checkbox-item {
   display: flex;
-  align-items: center;
-  gap: 8px; /* Reduced gap */
+  align-items: flex-start; /* Aligns to top for multi-line text */
+  gap: 6px; /* Reduced gap */
 }
 
-.radio-item input, .checkbox-item input {
-  width: 16px; /* Reduced size */
-  height: 16px; /* Reduced size */
+.radio-item input[type="radio"], 
+.checkbox-item input[type="checkbox"] {
+  width: 14px; 
+  height: 14px;
+  min-width: 14px; /* Ensure it doesn't shrink */
+  min-height: 14px;
   accent-color: var(--primary-color);
   cursor: pointer;
+  margin: 2px 0 0 0; /* Add top margin to align with first line of text */
 }
 
 .radio-item label, .checkbox-item label {
-  font-size: 0.9rem; /* Reduced size */
+  font-size: 0.85rem; /* Reduced size */
   color: var(--text-main);
   cursor: pointer;
 }
@@ -238,7 +242,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px; /* Reduced gap */
-  padding: 8px 16px; /* Reduced padding */
+  padding: 6px 12px; /* Reduced padding */
   background-color: #f1f5f9;
   border: 1px dashed var(--border-color);
   border-radius: 8px; /* Reduced radius */
@@ -265,21 +269,29 @@
   background-color: var(--primary-color);
   color: white;
   border: none;
-  padding: 12px; /* Reduced padding */
+  padding: 10px; /* Reduced padding */
   border-radius: 8px; /* Reduced radius */
   font-weight: 600;
-  font-size: 1rem; /* Reduced size */
+  font-size: 0.95rem; /* Reduced size */
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px; /* Reduced gap */
   transition: background-color 0.2s;
-  margin-top: 24px; /* Reduced margin */
+  margin-top: 8px; /* Reduced margin */
 }
 
 .submit-btn:hover {
   background-color: var(--primary-hover);
+}
+
+.security-notice {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .btn-icon {
@@ -301,24 +313,12 @@
   }
 
   .form-content {
-    padding: 20px;
+    padding: 0px;
+    padding-bottom: 0;
     overflow: visible; /* Let container scroll */
   }
 
   .form-grid {
     grid-template-columns: 1fr;
   }
-
-  .logo-7b-wrapper {
-    display: none;
-  }
-}
-
-.logo-7b-wrapper {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  z-index: 10;
-  opacity: 0.9;
-  pointer-events: none; /* Let clicks pass through if needed, though it's likely just visual */
 }
