@@ -1,0 +1,27 @@
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #fdfbf7;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px 30px;
+  overflow: auto;
+  background-color: #fdfbf7;
+}

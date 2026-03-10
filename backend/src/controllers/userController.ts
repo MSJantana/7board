@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import prisma from '../config/database';
-import bcrypt from 'bcrypt';
+
+const normalizeParam = (value: unknown): string | undefined => {
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : undefined;
+  return typeof value === 'string' ? value : undefined;
+};
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
@@ -25,7 +30,10 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 export const getUserById = async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = normalizeParam(req.params.id);
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
   try {
     const user = await prisma.user.findUnique({
       where: { id },
@@ -50,12 +58,11 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   const { name, email, password, role } = req.body;
-  
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email and password are required' });
   }
-
   try {
+    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -64,10 +71,9 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(String(password), 10);
 
-    const newUser = await prisma.user.create({
+  const newUser = await prisma.user.create({
       data: {
         name,
         email,
@@ -91,24 +97,19 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 export const updateUser = async (req: Request, res: Response) => {
-  const id = req.params.id as string;
-  const { name, email, role, password } = req.body;
-  
+  const id = normalizeParam(req.params.id);
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
+  const { name, email, role } = req.body;
   try {
-    const dataToUpdate: any = {
-      name,
-      email,
-      role
-    };
-
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      dataToUpdate.password = await bcrypt.hash(password, salt);
-    }
-
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: dataToUpdate,
+      data: {
+        name,
+        email,
+        role
+      },
       select: {
         id: true,
         name: true,
@@ -126,7 +127,10 @@ export const updateUser = async (req: Request, res: Response) => {
 };
 
 export const deleteUser = async (req: Request, res: Response) => {
-  const id = req.params.id as string;
+  const id = normalizeParam(req.params.id);
+  if (!id) {
+    return res.status(400).json({ error: 'Invalid user id' });
+  }
   try {
     await prisma.user.delete({
       where: { id }

@@ -26,12 +26,6 @@ lerna-debug.log*
 dist/
 build/
 
-# SSL Certificates
-nginx/certs/*.pem
-nginx/certs/*.key
-nginx/certs/*.crt
-!nginx/certs/README.md
-
 # IDEs and Editors
 .idea/
 .vscode/

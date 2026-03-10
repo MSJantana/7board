@@ -44,16 +44,6 @@ jobs:
         cd frontend
         npm run build
 
-    - name: Install Frontend Admin Dependencies
-      run: |
-        cd frontend-admin
-        npm ci
-
-    - name: Build Frontend Admin
-      run: |
-        cd frontend-admin
-        npm run build
-
   docker:
     runs-on: ubuntu-latest
     needs: build
@@ -89,13 +79,3 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/seven-board-frontend:latest
           ${{ secrets.DOCKERHUB_USERNAME }}/seven-board-frontend:${{ github.sha }}
-
-    - name: Build and push frontend-admin image
-      uses: docker/build-push-action@v6
-      with:
-        context: ./frontend-admin
-        file: ./frontend-admin/Dockerfile
-        push: true
-        tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/seven-board-frontend-admin:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/seven-board-frontend-admin:${{ github.sha }}

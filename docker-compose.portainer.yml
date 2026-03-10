@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     ports:
       - "7080:80"
-      - "7081:81"
       # Uncomment lines below after setting up SSL certificates
       # - "7443:443"
       # - "7444:8443"
@@ -22,9 +21,6 @@ services:
       upstream frontend {
           server frontend:80;
       }
-      upstream frontend_admin {
-          server frontend-admin:80;
-      }
       server {
           listen 80;
           location /api/ {
@@ -37,18 +33,6 @@ services:
               proxy_pass http://frontend;
           }
       }
-      server {
-          listen 81;
-          location /api/ {
-              proxy_pass http://backend;
-          }
-          location /uploads/ {
-              proxy_pass http://backend;
-          }
-          location / {
-              proxy_pass http://frontend_admin;
-          }
-      }
       # HTTPS Servers (Uncomment and ensure certs are present to enable)
       # server {
       #     listen 443 ssl;
@@ -58,20 +42,11 @@ services:
       #     location /uploads/ { proxy_pass http://backend; }
       #     location / { proxy_pass http://frontend; proxy_set_header X-Forwarded-Proto https; }
       # }
-      # server {
-      #     listen 8443 ssl;
-      #     ssl_certificate /etc/nginx/certs/fullchain.pem;
-      #     ssl_certificate_key /etc/nginx/certs/privkey.pem;
-      #     location /api/ { proxy_pass http://backend; proxy_set_header X-Forwarded-Proto https; }
-      #     location /uploads/ { proxy_pass http://backend; }
-      #     location / { proxy_pass http://frontend_admin; proxy_set_header X-Forwarded-Proto https; }
-      # }
       EOF
       nginx -g "daemon off;"'
     depends_on:
       - backend
       - frontend
-      - frontend-admin
 
   backend:
     image: msoftsantana/seven-board-backend:latest
@@ -86,15 +61,6 @@ services:
   frontend:
     image: msoftsantana/seven-board-frontend:latest
     container_name: 7board-frontend
-    restart: unless-stopped
-    environment:
-      - VITE_API_BASE_URL=/api
-    depends_on:
-      - backend
-
-  frontend-admin:
-    image: msoftsantana/seven-board-frontend-admin:latest
-    container_name: 7board-frontend-admin
     restart: unless-stopped
     environment:
       - VITE_API_BASE_URL=/api
