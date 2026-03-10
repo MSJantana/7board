@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO, isValid, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { DndContext, DragOverlay, useDraggable, useDroppable, type DragEndEvent, type DragStartEvent, PointerSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -410,7 +410,6 @@ export function Dashboard() {
           }}
         />
       )}
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }

@@ -28,9 +28,10 @@ export const Login: React.FC = () => {
       const { token, user } = response.data;
       login(token, user);
       navigate('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err.response?.data?.error || 'Falha ao realizar login');
+      const message = axios.isAxiosError<{ error?: string }>(err) ? err.response?.data?.error : undefined;
+      setError(message ?? 'Falha ao realizar login');
     } finally {
       setLoading(false);
     }

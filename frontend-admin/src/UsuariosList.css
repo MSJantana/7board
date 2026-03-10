@@ -62,7 +62,7 @@
 .users-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0;
+  border-spacing: 0;  
 }
 
 .users-table th {
@@ -74,7 +74,7 @@
   padding: 16px 24px;
   text-align: left;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);  
 }
 
 .users-table td {
@@ -202,32 +202,39 @@
   margin-bottom: 20px;
 }
 
-.icon-input-group {
+.usuarios-list-container .icon-input-group {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-icon {
+.usuarios-list-container .input-icon {
   position: absolute;
-  left: 16px;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #64748b; /* Cor do ícone */
   font-size: 20px;
   z-index: 10;
   pointer-events: none;
 }
 
-.form-group input,
-.form-group select {
+.usuarios-list-container .form-group input,
+.usuarios-list-container .form-group select {
   width: 100%;
-  padding: 16px 48px 16px 48px; /* Padding left maior para o ícone, right maior para o olho */
+  padding: 16px 56px 14px 50px;
   border: 1px solid transparent; /* Sem borda visível inicialmente, ou muito sutil */
   border-radius: 12px; /* Bordas arredondadas */
   font-size: 1rem;
   color: var(--text-primary);
   background-color: #e2e8f0; /* Cor de fundo cinza claro/esverdeado */
   transition: all 0.2s;
-  box-sizing: border-box;
+  box-sizing: border-box; 
+}
+
+.usuarios-list-container .icon-input-group input,
+.usuarios-list-container .icon-input-group select {
+  padding-left: 50px;
 }
 
 .password-toggle-btn {
@@ -252,25 +259,25 @@
   font-size: 20px;
 }
 
-.form-group input::placeholder {
+.usuarios-list-container .form-group input::placeholder {
   color: #64748b;
   font-weight: 500;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.usuarios-list-container .form-group input:focus,
+.usuarios-list-container .form-group select:focus {
   outline: none;
   background-color: white;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.form-group input.error {
+.usuarios-list-container .form-group input.error {
   border-color: var(--danger-color);
   background-color: #fef2f2;
 }
 
-.form-group input.error:focus {
+.usuarios-list-container .form-group input.error:focus {
   border-color: var(--danger-color);
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }

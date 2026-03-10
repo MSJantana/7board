@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import './UsuariosList.css';
 
 interface User {
@@ -160,12 +160,14 @@ export function UsuariosList() {
         </div>
       ),
       {
-        position: "top-center",
+        containerId: 'usuarios-delete',
+        position: "top-right",
         autoClose: false,
         closeOnClick: false,
         draggable: false,
         closeButton: false,
-        icon: false
+        icon: false,
+        style: { marginTop: '96px' }
       }
     );
   };
@@ -311,6 +313,20 @@ export function UsuariosList() {
           </tbody>
         </table>
       </div>
+
+      <ToastContainer
+        containerId="usuarios-delete"
+        position="top-right"
+        autoClose={false}
+        closeOnClick={false}
+        draggable={false}
+        pauseOnHover
+        newestOnTop
+        hideProgressBar
+        closeButton={false}
+        theme="light"
+        style={{ zIndex: 999999, marginTop: '96px' }}
+      />
 
       {isModalOpen && (
         <div className="modal-overlay">

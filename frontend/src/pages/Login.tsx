@@ -43,7 +43,7 @@ export const Login: React.FC = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Seven Board User</h2>
+        <h2>Midia Flow</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
