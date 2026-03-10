@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar.tsx';
 import { Header } from './components/Header.tsx';
 import { AdminTopHeader } from './components/AdminTopHeader.tsx';
@@ -8,6 +8,7 @@ import './AdminLayout.css';
 export function AdminLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
 
   return (
     <div className="app-root">
@@ -22,7 +23,9 @@ export function AdminLayout() {
         <div className="content-wrapper">
           <Header />
           <main className="main-content">
-            <Outlet />
+            <div key={location.pathname} className="page-enter">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ToastContainer, toast } from 'react-toastify';
+import { getCachedUsers, setCachedUsers } from './services/adminCache';
 import './UsuariosList.css';
 
 interface User {
@@ -31,8 +32,9 @@ const initialFormData: UserFormData = {
 };
 
 export function UsuariosList() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedUsers() as User[] | null;
+  const [users, setUsers] = useState<User[]>(() => cached ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<UserFormData>(initialFormData);
@@ -45,21 +47,22 @@ export function UsuariosList() {
     return regex.test(email);
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get('/api/users');
       setUsers(response.data);
+      setCachedUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Erro ao carregar usuários.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    void fetchUsers();
+  }, [fetchUsers]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

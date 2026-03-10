@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { createPortal } from 'react-dom';
 import { CardDetailsModal } from './components/CardDetailsModal';
+import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
 import './Dashboard.css';
 
 interface Solicitacao {
@@ -235,7 +236,7 @@ const KanbanColumnComponent = ({ column, cards, onCardClick }: KanbanColumnProps
 };
 
 export function Dashboard() {
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
 
   const statusLabel = (s: Solicitacao['status']) => {
@@ -295,12 +296,12 @@ export function Dashboard() {
   const fetchCardsData = async () => {
     try {
       const response = await axios.get('/api/cards');
-      return response.data.map((item: Solicitacao) => ({
-        ...item,
-        id: String(item.id),
-        status: item.status === 'in-progress' ? 'fazendo' : item.status,
-        veiculacao: typeof item.veiculacao === 'string' ? JSON.parse(item.veiculacao) : item.veiculacao,
-      }));
+      const normalized = normalizeCardsFromApi(response.data as unknown[]);
+      setCachedCards(normalized);
+      return normalized.map((item: unknown) => {
+        const raw = item as Record<string, unknown>;
+        return { ...raw, id: String(raw.id) } as Solicitacao;
+      });
     } catch (error) {
       console.error('Error fetching cards:', error);
       return [];
@@ -429,4 +430,3 @@ export function Dashboard() {
     </div>
   );
 }
-

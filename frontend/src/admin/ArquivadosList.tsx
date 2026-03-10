@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
+import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
 
 interface Solicitacao {
   id: string;
@@ -25,7 +26,7 @@ interface Solicitacao {
 }
 
 export function ArquivadosList() {
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterDept, setFilterDept] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,10 +41,9 @@ export function ArquivadosList() {
 
   const fetchSolicitacoes = async () => {
     const response = await axios.get('/api/cards');
-    return response.data.map((item: Solicitacao) => ({
-      ...item,
-      veiculacao: typeof item.veiculacao === 'string' ? JSON.parse(item.veiculacao) : item.veiculacao,
-    }));
+    const normalized = normalizeCardsFromApi(response.data as unknown[]);
+    setCachedCards(normalized);
+    return normalized as Solicitacao[];
   };
 
   useEffect(() => {

@@ -25,3 +25,19 @@
   overflow: auto;
   background-color: #fdfbf7;
 }
+
+.page-enter {
+  min-height: 100%;
+  animation: pageEnter 160ms ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -4,6 +4,7 @@ import { format, parseISO, parse, isValid, differenceInHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
+import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
 
 interface Solicitacao {
   id: string;
@@ -36,7 +37,7 @@ const parseLogDate = (value: string): Date | null => {
 };
 
 export function SolicitacoesList() {
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterDept, setFilterDept] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -46,11 +47,9 @@ export function SolicitacoesList() {
 
   const fetchSolicitacoes = async () => {
     const response = await axios.get('/api/cards');
-    return response.data.map((item: Solicitacao) => ({
-      ...item,
-      status: item.status === 'in-progress' ? 'fazendo' : item.status,
-      veiculacao: typeof item.veiculacao === 'string' ? JSON.parse(item.veiculacao) : item.veiculacao,
-    }));
+    const normalized = normalizeCardsFromApi(response.data as unknown[]);
+    setCachedCards(normalized);
+    return normalized as Solicitacao[];
   };
 
   useEffect(() => {
