@@ -42,7 +42,7 @@ const ensureStages = async () => {
     where: { boardKey: 'default' },
     select: { id: true, name: true },
   });
-  return new Map(all.map((x) => [x.name, x.id]));
+  return new Map(all.map((x: { id: string; name: string }) => [x.name, x.id]));
 };
 
 const main = async () => {
