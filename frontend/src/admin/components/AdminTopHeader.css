@@ -490,19 +490,28 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.user-avatar-small {
-  width: 40px;
-  height: 40px;
+.user-avatar-badge {
+  width: 34px;
+  height: 34px;
   background-color: #ffffff;
+  color: #213252;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.2px;
 }
 
-.user-avatar-small .material-icons {
-  font-size: 20px;
-  color: #213252;
+.user-trigger-chevron {
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease;
+}
+
+.user-trigger-chevron.open {
+  transform: rotate(180deg);
 }
 
 .user-dropdown-menu {
@@ -519,8 +528,31 @@
   animation: slideDown 0.2s ease-out;
 }
 
-.user-dropdown-header-content {
+.user-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 8px 10px 6px;
+}
+
+.user-dropdown-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-dropdown-avatar .material-icons {
+  font-size: 18px;
+  color: #111827;
+}
+
+.user-dropdown-header-content {
+  padding: 0;
 }
 
 .user-name-text {
@@ -564,6 +596,22 @@
 .user-dropdown-item .material-icons {
   font-size: 18px;
   color: #6b7280;
+}
+
+.user-dropdown-label {
+  line-height: 1;
+}
+
+.user-dropdown-item.danger {
+  color: #b91c1c;
+}
+
+.user-dropdown-item.danger .material-icons {
+  color: #b91c1c;
+}
+
+.user-dropdown-item.danger:hover {
+  background-color: #fef2f2;
 }
 
 @media (max-width: 768px) {

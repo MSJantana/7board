@@ -83,6 +83,15 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
+  const userInitials = (() => {
+    const name = user?.name?.trim();
+    if (!name) return 'U';
+    const parts = name.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? 'U';
+    const last = parts.length > 1 ? parts.at(-1)?.[0] ?? '' : '';
+    return `${first}${last}`.toUpperCase();
+  })();
+
   useEffect(() => {
     const onMouseDown = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -164,8 +173,7 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
   const filteredNotifications = activeTab === 'today' ? todayNotifications : previousNotifications;
 
   return (
-    <>
-      <header className="top-system-header">
+    <header className="top-system-header">
         <div className="system-left">
           <button className="menu-btn" onClick={onMenuClick} aria-label="Abrir menu" type="button">
             <span className="material-icons" aria-hidden="true">
@@ -269,26 +277,32 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
               aria-expanded={showUserDropdown}
               type="button"
             >
-              <span className="user-name-display">{user?.name ?? 'Usuário'}</span>
-              <div className="user-avatar-small" title="Perfil">
-                <span className="material-icons" aria-hidden="true">
-                  person
-                </span>
+              <div className="user-avatar-badge" aria-hidden="true">
+                {userInitials}
               </div>
+              <span className="user-name-display">{user?.name ?? 'Usuário'}</span>
+              <span className={`material-icons user-trigger-chevron ${showUserDropdown ? 'open' : ''}`} aria-hidden="true">
+                expand_more
+              </span>
             </button>
 
             {showUserDropdown && (
               <div className="user-dropdown-menu" role="menu">
                 {user && (
-                  <div className="user-dropdown-header-content">
-                    <div className="user-name-text">{user.name}</div>
-                    <div className="user-email-text">{user.email}</div>
+                  <div className="user-dropdown-header">
+                    <div className="user-dropdown-avatar" aria-hidden="true">
+                      <span className="material-icons">person</span>
+                    </div>
+                    <div className="user-dropdown-header-content">
+                      <div className="user-name-text">{user.name}</div>
+                      <div className="user-email-text">{user.email}</div>
+                    </div>
                   </div>
                 )}
                 {user && <div className="user-dropdown-divider" />}
                 {user ? (
                   <button
-                    className="user-dropdown-item"
+                    className="user-dropdown-item danger"
                     role="menuitem"
                     onClick={() => {
                       setShowUserDropdown(false);
@@ -299,8 +313,8 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
                   >
                     <span className="material-icons" aria-hidden="true">
                       logout
-                    </span>{' '}
-                    Sair
+                    </span>
+                    <span className="user-dropdown-label">Sair</span>
                   </button>
                 ) : (
                   <button
@@ -314,8 +328,8 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
                   >
                     <span className="material-icons" aria-hidden="true">
                       login
-                    </span>{' '}
-                    Login
+                    </span>
+                    <span className="user-dropdown-label">Login</span>
                   </button>
                 )}
               </div>
@@ -339,7 +353,6 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
             />
           )}
         </div>
-      </header>
-    </>
+    </header>
   );
 }

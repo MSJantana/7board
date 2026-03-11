@@ -212,9 +212,9 @@ export const sendSolicitacaoEmail = async (to: string, solicitacaoData: any) => 
     });
 
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Seven Board System" <noreply@sevenboard.com>',
+      from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
       to: to,
-      subject: `Bilhete de Solicitação: ${solicitacaoData.protocolo || 'Confirmado'}`,
+      subject: `Protocolo de Solicitação: ${solicitacaoData.protocolo || 'Confirmado'}`,
       html,
     });
 
@@ -245,7 +245,7 @@ export const sendConclusaoEmail = async (to: string, solicitacaoData: any) => {
     });
 
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Seven Board System" <noreply@sevenboard.com>',
+      from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
       to: to,
       subject: `Solicitação Concluída: ${solicitacaoData.protocolo || solicitacaoData.tipoSolicitacao}`,
       html,
@@ -277,7 +277,7 @@ export const sendReaberturaEmail = async (to: string, solicitacaoData: any) => {
     });
 
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Seven Board System" <noreply@sevenboard.com>',
+      from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
       to: to,
       subject: `Solicitação Reaberta: ${solicitacaoData.protocolo || solicitacaoData.tipoSolicitacao}`,
       html,

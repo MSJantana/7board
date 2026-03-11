@@ -52,7 +52,7 @@ export function ArquivadosList() {
       .then((data) => {
         if (isMounted) {
           const archived = data.filter((item: Solicitacao) => item.status === 'archived');
-          const sorted = archived.sort((a: Solicitacao, b: Solicitacao) => {
+          const sorted = [...archived].sort((a: Solicitacao, b: Solicitacao) => {
             const dateA = getDateValue(a);
             const dateB = getDateValue(b);
             return dateB - dateA;
