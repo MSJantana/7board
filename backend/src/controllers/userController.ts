@@ -7,6 +7,15 @@ const normalizeParam = (value: unknown): string | undefined => {
   return typeof value === 'string' ? value : undefined;
 };
 
+const normalizeRoleEnum = (role: unknown) => {
+  const value = String(role ?? '').trim();
+  const lower = value.toLowerCase();
+  if (lower === 'admin' || value === 'ADMIN') return 'ADMIN' as const;
+  if (lower === 'manager' || value === 'MANAGER') return 'MANAGER' as const;
+  if (lower === 'agent' || value === 'AGENT') return 'AGENT' as const;
+  return 'USER' as const;
+};
+
 export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
@@ -78,7 +87,8 @@ export const createUser = async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
-        role: role || 'user'
+        role: role || 'user',
+        roleEnum: normalizeRoleEnum(role),
       },
       select: {
         id: true,
@@ -108,7 +118,8 @@ export const updateUser = async (req: Request, res: Response) => {
       data: {
         name,
         email,
-        role
+        role,
+        roleEnum: normalizeRoleEnum(role),
       },
       select: {
         id: true,

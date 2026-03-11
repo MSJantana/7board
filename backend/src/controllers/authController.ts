@@ -72,7 +72,7 @@ export const setupAdmin = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role: 'admin' },
+      data: { name, email, password: hashedPassword, role: 'admin', roleEnum: 'ADMIN' },
       select: { id: true, name: true, email: true, role: true },
     });
 

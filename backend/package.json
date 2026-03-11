@@ -6,7 +6,13 @@
   "scripts": {
     "start": "npx ts-node src/index.ts",
     "dev": "nodemon --watch \"src/**/*.ts\" --exec \"npx ts-node\" src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "prisma:generate": "npx prisma generate",
+    "db:upgrade": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/001_kanban_metrics.sql",
+    "db:contract": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/002_contract_stage_required.sql",
+    "db:cleanup": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/003_drop_legacy_solicitacao.sql",
+    "db:expand-observacoes": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/004_expand_observacoes.sql",
+    "db:backfill": "npx ts-node src/scripts/backfillKanbanMetrics.ts"
   },
   "keywords": [],
   "author": "",

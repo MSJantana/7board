@@ -27,10 +27,8 @@ const safeParseVeiculacao = (value: unknown) => {
 export const normalizeCardsFromApi = (items: unknown[]) => {
   return items.map((item) => {
     const raw = item as Record<string, unknown>;
-    const status = raw.status === 'in-progress' ? 'fazendo' : raw.status;
     return {
       ...raw,
-      status,
       veiculacao: safeParseVeiculacao(raw.veiculacao),
     };
   });

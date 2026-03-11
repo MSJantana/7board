@@ -33,8 +33,7 @@ const buildTicketEmail = (opts: TicketEmailOptions): string => {
   const departamento = s.departamento || '-';
   const tipo = s.tipoSolicitacao || '-';
   const descricao = s.descricao || '-';
-  const dataEntrega = s.dataEntrega || '-';
-  const horarioEntrega = s.horarioEntrega || 'Comercial';
+  const deliveryAt = s.deliveryAt ? formatDateTime(s.deliveryAt) : '-';
 
   return `
     <!DOCTYPE html>
@@ -170,7 +169,7 @@ const buildTicketEmail = (opts: TicketEmailOptions): string => {
               </tr>
               <tr>
                 <td class="label">Data de entrega</td>
-                <td class="value">${dataEntrega} ${horarioEntrega ? `- ${horarioEntrega}` : ''}</td>
+                <td class="value">${deliveryAt}</td>
               </tr>
               <tr>
                 <td class="label">Status</td>

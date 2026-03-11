@@ -124,8 +124,9 @@ export function SolicitacaoForm() {
     data.append('email', formData.email);
     data.append('tipoSolicitacao', formData.tipoSolicitacao);
     data.append('descricao', formData.descricao);
-    data.append('dataEntrega', formData.dataEntrega);
-    data.append('horarioEntrega', formData.horarioEntrega);
+    const time = formData.horarioEntrega ? formData.horarioEntrega : '23:59';
+    const deliveryAt = formData.dataEntrega ? `${formData.dataEntrega}T${time}:00` : '';
+    data.append('deliveryAt', deliveryAt);
     data.append('observacoes', formData.observacoes);
     // Enviar array como string JSON para simplificar parse no backend (ou append múltiplo)
     data.append('veiculacao', JSON.stringify(formData.veiculacao));

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
 import { CardDetailsModal } from './CardDetailsModal';
+import { getDefaultStageIds, type Stage } from '../services/stageUtils';
 import './AdminTopHeader.css';
 
 interface Solicitacao {
@@ -15,21 +16,12 @@ interface Solicitacao {
   tipoSolicitacao: string;
   descricao: string;
   veiculacao: string[] | string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  stageId: string;
+  stage?: Stage | null;
+  archivedAt?: string | null;
   observacoes?: string;
   arquivoUrl?: string;
-  status:
-    | 'todo'
-    | 'in-progress'
-    | 'fazendo'
-    | 'done'
-    | 'archived'
-    | 'video-materiais'
-    | 'cobertura-eventos'
-    | 'arte'
-    | 'aprovacao'
-    | 'parado';
   createdAt: string;
 }
 
@@ -79,6 +71,7 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
   const [activeTab, setActiveTab] = useState<'today' | 'previous'>('today');
   const [animatingIds, setAnimatingIds] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
+  const [stages, setStages] = useState<Stage[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
@@ -114,6 +107,13 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('keydown', onKeyDown);
     };
+  }, []);
+
+  useEffect(() => {
+    axios
+      .get('/api/stages', { params: { boardKey: 'default', active: true } })
+      .then((response) => setStages(response.data as Stage[]))
+      .catch((error) => console.error('Error fetching stages:', error));
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -339,16 +339,37 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
           {selectedCard && (
             <CardDetailsModal
               card={selectedCard}
+              stages={stages}
               onClose={() => setSelectedCard(null)}
-              onStatusChange={async (id, status) => {
-                try {
-                  await axios.put(`/api/cards/${id}/status`, { status });
-                  toast.success('Status atualizado!');
-                  setSelectedCard((prev) => (prev ? { ...prev, status: status as Solicitacao['status'] } : null));
-                } catch (error) {
-                  console.error('Error updating status:', error);
-                  toast.error('Erro ao atualizar status.');
-                }
+              onAction={(id, action) => {
+                const { todoId } = getDefaultStageIds(stages);
+                const update = async () => {
+                  if (action.type === 'move') {
+                    await axios.put(`/api/cards/${id}/status`, { stageId: action.stageId });
+                    return;
+                  }
+                  if (action.type === 'archive') {
+                    await axios.put(`/api/cards/${id}/status`, { archived: true });
+                    return;
+                  }
+                  if (action.type === 'reopen') {
+                    if (!todoId) {
+                      throw new Error('Stage TODO não encontrada');
+                    }
+                    await axios.put(`/api/cards/${id}/status`, { archived: false, stageId: todoId });
+                  }
+                };
+
+                void update()
+                  .then(async () => {
+                    toast.success('Atualizado!');
+                    const response = await axios.get(`/api/cards/${id}`);
+                    setSelectedCard(response.data as Solicitacao);
+                  })
+                  .catch((error) => {
+                    console.error('Error updating card:', error);
+                    toast.error('Erro ao atualizar.');
+                  });
               }}
             />
           )}

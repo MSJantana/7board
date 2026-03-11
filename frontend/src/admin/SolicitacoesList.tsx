@@ -6,6 +6,13 @@ import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
 import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
 
+interface Stage {
+  id: string;
+  name: string;
+  order: number;
+  kind?: 'TODO' | 'IN_PROGRESS' | 'VALIDATION' | 'DONE';
+}
+
 interface Solicitacao {
   id: string;
   departamento: string;
@@ -14,16 +21,39 @@ interface Solicitacao {
   tipoSolicitacao: string;
   descricao: string;
   veiculacao: string[] | string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  stageId: string;
+  stage?: Stage | null;
   observacoes?: string;
   arquivoUrl?: string;
-  status: 'todo' | 'in-progress' | 'fazendo' | 'done' | 'archived' | 'video-materiais' | 'cobertura-eventos' | 'arte' | 'aprovacao' | 'parado';
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
   archivedAt?: string;
 }
+
+const getStageClass = (stageName: string) => {
+  switch (stageName) {
+    case 'Novas solicitações':
+      return 'status-todo';
+    case 'Videos/Matérias':
+      return 'status-video-materiais';
+    case 'Cobertura de Eventos':
+      return 'status-cobertura-eventos';
+    case 'Arte':
+      return 'status-arte';
+    case 'Fazendo':
+      return 'status-fazendo';
+    case 'A Aprovar':
+      return 'status-aprovacao';
+    case 'Parado':
+      return 'status-parado';
+    case 'Concluído':
+      return 'status-done';
+    default:
+      return '';
+  }
+};
 
 const parseLogDate = (value: string): Date | null => {
   const cleaned = value.replace(',', '').trim();
@@ -40,10 +70,11 @@ export function SolicitacoesList() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterDept, setFilterDept] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStageId, setFilterStageId] = useState('');
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [stages, setStages] = useState<Stage[]>([]);
 
   const fetchSolicitacoes = async () => {
     const response = await axios.get('/api/cards');
@@ -52,12 +83,18 @@ export function SolicitacoesList() {
     return normalized as Solicitacao[];
   };
 
+  const fetchStages = async () => {
+    const response = await axios.get('/api/stages', { params: { boardKey: 'default', active: true } });
+    return response.data as Stage[];
+  };
+
   useEffect(() => {
     let isMounted = true;
-    fetchSolicitacoes()
-      .then((data) => {
+    Promise.all([fetchSolicitacoes(), fetchStages()])
+      .then(([data, stageData]) => {
         if (isMounted) {
           setSolicitacoes(data);
+          setStages(stageData);
         }
       })
       .catch((error) => {
@@ -76,75 +113,23 @@ export function SolicitacoesList() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'Pendente';
-      case 'in-progress':
-        return 'Em Progresso';
-      case 'fazendo':
-        return 'Fazendo';
-      case 'done':
-        return 'Concluído';
-      case 'archived':
-        return 'Arquivado';
-      case 'video-materiais':
-        return 'Video/Materiais';
-      case 'cobertura-eventos':
-        return 'Cobertura de Eventos';
-      case 'arte':
-        return 'Arte';
-      case 'aprovacao':
-        return 'Aprovação';
-      case 'parado':
-        return 'Parado';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'status-todo';
-      case 'in-progress':
-        return 'status-in-progress';
-      case 'fazendo':
-        return 'status-fazendo';
-      case 'done':
-        return 'status-done';
-      case 'archived':
-        return 'status-archived';
-      case 'video-materiais':
-        return 'status-video-materiais';
-      case 'cobertura-eventos':
-        return 'status-cobertura-eventos';
-      case 'arte':
-        return 'status-arte';
-      case 'aprovacao':
-        return 'status-aprovacao';
-      case 'parado':
-        return 'status-parado';
-      default:
-        return '';
-    }
-  };
-
   const formatVeiculacao = (veiculacao: string[] | string) => {
     if (Array.isArray(veiculacao)) return veiculacao.join(', ');
     return veiculacao;
   };
 
   const filteredSolicitacoes = solicitacoes.filter((item) => {
+    if (item.archivedAt) return false;
     const matchesDept = filterDept ? item.departamento === filterDept : true;
-    const matchesStatus = filterStatus ? item.status === filterStatus : true;
+    const effectiveStageId = item.stageId ?? '';
+    const matchesStage = filterStageId ? effectiveStageId === filterStageId : true;
     const matchesSearch = search
       ? item.descricao.toLowerCase().includes(search.toLowerCase()) ||
         item.protocolo?.toLowerCase().includes(search.toLowerCase()) ||
         item.departamento.toLowerCase().includes(search.toLowerCase())
       : true;
 
-    return matchesDept && matchesStatus && matchesSearch;
+    return matchesDept && matchesStage && matchesSearch;
   });
 
   const totalPages = Math.ceil(filteredSolicitacoes.length / itemsPerPage);
@@ -182,11 +167,16 @@ export function SolicitacoesList() {
         </div>
 
         <div className="filter-group">
-          <select className="filter-select" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
+          <select className="filter-select" value={filterStageId} onChange={(e) => { setFilterStageId(e.target.value); setCurrentPage(1); }}>
             <option value="">Todos Status</option>
-            <option value="todo">Pendente</option>
-            <option value="in-progress">Em Progresso</option>
-            <option value="done">Concluído</option>
+            {stages
+              .slice()
+              .sort((a, b) => a.order - b.order)
+              .map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -226,19 +216,14 @@ export function SolicitacoesList() {
           </thead>
           <tbody>
             {currentItems.map((item) => {
-              const deliveryDate = parseISO(item.dataEntrega);
+              const deliveryDate = parseISO(item.deliveryAt);
               let hoursLeft = 1000;
               if (isValid(deliveryDate)) {
                 const targetDate = deliveryDate;
-                if (item.horarioEntrega) {
-                  const [h, m] = item.horarioEntrega.split(':').map(Number);
-                  targetDate.setHours(h || 0, m || 0, 0, 0);
-                } else {
-                  targetDate.setHours(23, 59, 59, 999);
-                }
                 hoursLeft = differenceInHours(targetDate, new Date());
               }
-              const isUrgent = hoursLeft < 24 && !['done', 'archived', 'concluido'].includes(item.status);
+              const isUrgent = hoursLeft < 24 && !item.archivedAt && item.stage?.name !== 'Concluído';
+              const statusLabel = item.stage?.name ?? '-';
 
               return (
                 <Fragment key={item.id}>
@@ -264,10 +249,10 @@ export function SolicitacoesList() {
                           event
                         </span>
                         <span style={{ color: isUrgent ? '#e74c3c' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal' }}>
-                          {format(parseISO(item.dataEntrega), 'dd MMM yyyy', { locale: ptBR })}
+                          {format(parseISO(item.deliveryAt), 'dd MMM yyyy', { locale: ptBR })}
                         </span>
                       </div>
-                      {item.horarioEntrega && <small style={{ color: '#999', marginLeft: '26px' }}>{item.horarioEntrega}</small>}
+                      <small style={{ color: '#999', marginLeft: '26px' }}>{format(parseISO(item.deliveryAt), 'HH:mm')}</small>
                     </td>
                     <td className="protocol-cell" data-label="Protocolo">
                       {item.protocolo || '-'}
@@ -277,7 +262,7 @@ export function SolicitacoesList() {
                     </td>
                     <td data-label="Tipo">{item.tipoSolicitacao}</td>
                     <td data-label="Status">
-                      <span className={`status-badge ${getStatusClass(item.status)}`}>{getStatusLabel(item.status)}</span>
+                      <span className={`status-badge ${getStageClass(statusLabel)}`}>{statusLabel}</span>
                     </td>
                     <td data-label="Ações">
                       <span className={`material-icons expand-icon ${expandedId === item.id ? 'open' : ''}`}>expand_more</span>
@@ -401,6 +386,24 @@ export function SolicitacoesList() {
                                   }
 
                                   const lowerMsg = msg.toLowerCase();
+                                  if (lowerMsg.startsWith('etapa alterada')) {
+                                    const arrowIdx = msg.indexOf('→');
+                                    const toLabel = arrowIdx !== -1 ? msg.substring(arrowIdx + 1).trim() : msg;
+                                    const cls = (() => {
+                                      const lower = toLabel.toLowerCase();
+                                      if (lower.includes('conclu')) return 'done';
+                                      if (lower.includes('novas')) return 'reopened';
+                                      if (lower.includes('arquiv')) return 'done';
+                                      return 'production';
+                                    })();
+
+                                    return (
+                                      <div key={key} className={`log-item ${cls}`}>
+                                        <div className="log-text">{msg}</div>
+                                        <span className="log-date">{displayDate}</span>
+                                      </div>
+                                    );
+                                  }
                                   if (lowerMsg.includes('reaberta')) {
                                     return (
                                       <div key={key} className="log-item reopened">

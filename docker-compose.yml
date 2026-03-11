@@ -23,6 +23,13 @@ services:
     environment:
       - PORT=3001
       - DATABASE_URL=${DATABASE_URL}
+      - PRISMA_SYNC_ON_START=true
+      - BOOTSTRAP_STAGES_ON_START=true
+      - SEED_ADMIN_ENABLED=true
+      - SEED_ADMIN_NAME=${SEED_ADMIN_NAME}
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD}
+      - SEED_ADMIN_RESET_PASSWORD=${SEED_ADMIN_RESET_PASSWORD:-false}
     # depends_on:
     #   - mysql
     volumes:

@@ -5,7 +5,7 @@ import { getUsers, getUserById, createUser, updateUser, deleteUser } from '../co
 const router = Router();
 
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  if (!req.user || req.user.role !== 'admin') {
+  if (!req.user || !['admin', 'ADMIN'].includes(req.user.role)) {
     return res.status(403).json({ error: 'Acesso negado' });
   }
   return next();
@@ -21,4 +21,3 @@ router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
 
 export default router;
-

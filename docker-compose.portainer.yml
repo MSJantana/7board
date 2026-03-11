@@ -55,6 +55,13 @@ services:
     environment:
       PORT: ${BACKEND_PORT:-3001}
       DATABASE_URL: mysql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DB_HOST:-host.docker.internal}:${MYSQL_PORT:-3306}/${DATABASE_NAME}
+      PRISMA_SYNC_ON_START: "true"
+      BOOTSTRAP_STAGES_ON_START: "true"
+      SEED_ADMIN_ENABLED: "true"
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_ADMIN_RESET_PASSWORD: ${SEED_ADMIN_RESET_PASSWORD:-false}
     volumes:
       - uploads_data:/app/uploads
 

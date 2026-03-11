@@ -6,6 +6,13 @@ import './SolicitacoesList.css';
 import { Pagination } from './components/Pagination';
 import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
 
+interface Stage {
+  id: string;
+  name: string;
+  order: number;
+  kind?: 'TODO' | 'IN_PROGRESS' | 'VALIDATION' | 'DONE';
+}
+
 interface Solicitacao {
   id: string;
   departamento: string;
@@ -14,11 +21,11 @@ interface Solicitacao {
   tipoSolicitacao: string;
   descricao: string;
   veiculacao: string[] | string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  stageId: string;
+  stage?: Stage | null;
   observacoes?: string;
   arquivoUrl?: string;
-  status: string;
   createdAt: string;
   startedAt?: string;
   completedAt?: string;
@@ -51,7 +58,7 @@ export function ArquivadosList() {
     fetchSolicitacoes()
       .then((data) => {
         if (isMounted) {
-          const archived = data.filter((item: Solicitacao) => item.status === 'archived');
+          const archived = data.filter((item: Solicitacao) => !!item.archivedAt);
           const sorted = [...archived].sort((a: Solicitacao, b: Solicitacao) => {
             const dateA = getDateValue(a);
             const dateB = getDateValue(b);
@@ -74,36 +81,6 @@ export function ArquivadosList() {
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'Pendente';
-      case 'in-progress':
-        return 'Em Progresso';
-      case 'done':
-        return 'Concluído';
-      case 'archived':
-        return 'Arquivado';
-      default:
-        return status;
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'status-todo';
-      case 'in-progress':
-        return 'status-in-progress';
-      case 'done':
-        return 'status-done';
-      case 'archived':
-        return 'status-archived';
-      default:
-        return '';
-    }
   };
 
   const formatVeiculacao = (veiculacao: string[] | string) => {
@@ -222,7 +199,7 @@ export function ArquivadosList() {
                   </td>
                   <td data-label="Tipo">{item.tipoSolicitacao}</td>
                   <td data-label="Status">
-                    <span className={`status-badge ${getStatusClass(item.status)}`}>{getStatusLabel(item.status)}</span>
+                    <span className="status-badge status-archived">Arquivado</span>
                   </td>
                   <td data-label="Ações">
                     <span className={`material-icons expand-icon ${expandedId === item.id ? 'open' : ''}`}>expand_more</span>

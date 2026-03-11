@@ -3,6 +3,11 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import './CardDetailsModal.css';
 
+interface Stage {
+  id: string;
+  name: string;
+}
+
 interface Solicitacao {
   id: string;
   departamento: string;
@@ -11,31 +16,22 @@ interface Solicitacao {
   tipoSolicitacao: string;
   descricao: string;
   veiculacao: string[] | string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  stage?: Stage | null;
+  archivedAt?: string | null;
   observacoes?: string;
   arquivoUrl?: string;
-  status:
-    | 'todo'
-    | 'in-progress'
-    | 'fazendo'
-    | 'done'
-    | 'archived'
-    | 'video-materiais'
-    | 'cobertura-eventos'
-    | 'arte'
-    | 'aprovacao'
-    | 'parado';
   createdAt: string;
 }
 
 interface CardDetailsModalProps {
   card: Solicitacao | null;
   onClose: () => void;
-  onStatusChange?: (id: string, newStatus: string) => void;
+  stages?: Stage[];
+  onAction?: (id: string, action: { type: 'move'; stageId: string } | { type: 'archive' } | { type: 'reopen' }) => void;
 }
 
-export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<CardDetailsModalProps>) {
+export function CardDetailsModal({ card, onClose, onAction, stages }: Readonly<CardDetailsModalProps>) {
   if (!card) return null;
 
   const veiculacaoList = (() => {
@@ -50,11 +46,23 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
 
   const formattedDate = (() => {
     try {
-      return card.dataEntrega ? format(parseISO(card.dataEntrega), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR }) : 'Sem data';
+      return format(parseISO(card.deliveryAt), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
     } catch {
-      return card.dataEntrega || 'Data inválida';
+      return 'Data inválida';
     }
   })();
+
+  const formattedTime = (() => {
+    try {
+      return format(parseISO(card.deliveryAt), 'HH:mm', { locale: ptBR });
+    } catch {
+      return '';
+    }
+  })();
+
+  const doingStageId = stages?.find((s) => s.name === 'Fazendo')?.id ?? null;
+  const doneStageId = stages?.find((s) => s.name === 'Concluído')?.id ?? null;
+  const currentStageName = card.stage?.name ?? '';
 
   return createPortal(
     <div className="modal-backdrop">
@@ -127,15 +135,25 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
               <span className="material-icons">calendar_today</span>
               {formattedDate}
             </div>
-            {card.horarioEntrega && (
+            {formattedTime && (
               <div className="time-row">
                 <div className="custom-input-display time-display">
                   <span className="material-icons">schedule</span>
-                  {card.horarioEntrega}
+                  {formattedTime}
                 </div>
               </div>
             )}
           </div>
+
+          {card.stage?.name && (
+            <div className="form-section">
+              <label htmlFor="stage-display">Etapa</label>
+              <div className="custom-input-display">
+                <span className="material-icons">view_kanban</span>
+                {card.stage.name}
+              </div>
+            </div>
+          )}
 
           {veiculacaoList.length > 0 && (
             <div className="form-section">
@@ -169,33 +187,34 @@ export function CardDetailsModal({ card, onClose, onStatusChange }: Readonly<Car
         </div>
 
         <div className="modal-footer">
-          {onStatusChange && (
+          {onAction && (
             <div className="modal-actions-left">
-              {card.status === 'todo' && (
-                <button className="action-btn btn-production" onClick={() => onStatusChange(card.id, 'fazendo')} type="button">
+              {currentStageName === 'Novas solicitações' && doingStageId && (
+                <button className="action-btn btn-production" onClick={() => onAction(card.id, { type: 'move', stageId: doingStageId })} type="button">
                   <span className="material-icons">engineering</span>
                   <span>Fazendo</span>
                 </button>
               )}
 
-              {card.status !== 'done' && (
-                <button className="action-btn btn-finish" onClick={() => onStatusChange(card.id, 'done')} type="button">
+              {currentStageName !== 'Concluído' && doneStageId && (
+                <button className="action-btn btn-finish" onClick={() => onAction(card.id, { type: 'move', stageId: doneStageId })} type="button">
                   <span className="material-icons">check_circle</span>
                   <span>Concluido</span>
                 </button>
               )}
 
-              {card.status === 'done' && (
-                <>
-                  <button className="action-btn btn-reopen" onClick={() => onStatusChange(card.id, 'todo')} type="button">
+              {currentStageName === 'Concluído' && (
+                <button className="action-btn btn-reopen" onClick={() => onAction(card.id, { type: 'reopen' })} type="button">
                     <span className="material-icons">refresh</span>
                     <span>Reabrir</span>
-                  </button>
-                  <button className="action-btn btn-archive" onClick={() => onStatusChange(card.id, 'archived')} type="button">
-                    <span className="material-icons">archive</span>
-                    <span>Arquivar</span>
-                  </button>
-                </>
+                </button>
+              )}
+
+              {currentStageName === 'Concluído' && !card.archivedAt && (
+                <button className="action-btn btn-archive" onClick={() => onAction(card.id, { type: 'archive' })} type="button">
+                  <span className="material-icons">archive</span>
+                  <span>Arquivar</span>
+                </button>
               )}
             </div>
           )}

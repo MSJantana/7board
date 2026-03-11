@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO, isValid, differenceInHours } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -20,6 +19,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { createPortal } from 'react-dom';
 import { CardDetailsModal } from './components/CardDetailsModal';
 import { getCachedCards, normalizeCardsFromApi, setCachedCards } from './services/adminCache';
+import { getDefaultStageIds, type Stage as StageModel } from './services/stageUtils';
 import './Dashboard.css';
 
 interface Solicitacao {
@@ -30,30 +30,39 @@ interface Solicitacao {
   tipoSolicitacao: string;
   descricao: string;
   veiculacao: string[] | string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  stageId: string;
+  stage?: Stage | null;
   observacoes?: string;
   arquivoUrl?: string;
-  status:
-    | 'todo'
-    | 'in-progress'
-    | 'fazendo'
-    | 'done'
-    | 'archived'
-    | 'video-materiais'
-    | 'cobertura-eventos'
-    | 'arte'
-    | 'aprovacao'
-    | 'parado';
   createdAt: string;
+  archivedAt?: string | null;
 }
 
-interface KanbanColumn {
-  id: string;
-  title: string;
-  status: 'todo' | 'in-progress' | 'fazendo' | 'done' | 'video-materiais' | 'cobertura-eventos' | 'arte' | 'aprovacao' | 'parado';
-  color: string;
-}
+type Stage = StageModel;
+
+const getStageColor = (name: string) => {
+  switch (name) {
+    case 'Novas solicitações':
+      return '#fbbf24';
+    case 'Videos/Matérias':
+      return '#3b82f6';
+    case 'Cobertura de Eventos':
+      return '#8b5cf6';
+    case 'Arte':
+      return '#ec4899';
+    case 'Fazendo':
+      return '#0ea5e9';
+    case 'A Aprovar':
+      return '#10b981';
+    case 'Parado':
+      return '#ef4444';
+    case 'Concluído':
+      return '#34d399';
+    default:
+      return '#94a3b8';
+  }
+};
 
 const getDepartmentColorClass = (department: string) => {
   switch (department?.toLowerCase()) {
@@ -76,23 +85,17 @@ interface KanbanCardProps {
 }
 
 const calculateCardStatus = (item: Solicitacao) => {
-  const deliveryDate = parseISO(item.dataEntrega);
+  const deliveryDate = parseISO(item.deliveryAt);
   let hoursLeft = 1000;
   let isOverdue = false;
 
   if (isValid(deliveryDate)) {
     const targetDate = deliveryDate;
-    if (item.horarioEntrega) {
-      const [h, m] = item.horarioEntrega.split(':').map(Number);
-      targetDate.setHours(h || 0, m || 0, 0, 0);
-    } else {
-      targetDate.setHours(23, 59, 59, 999);
-    }
     isOverdue = new Date() > targetDate;
     hoursLeft = differenceInHours(targetDate, new Date());
   }
 
-  const isActive = !['done', 'archived', 'concluido'].includes(item.status);
+  const isActive = !item.archivedAt;
   const isUrgent = hoursLeft < 24 && isActive;
   const showOverdueCard = isOverdue && isActive;
 
@@ -177,14 +180,14 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
             style={{ color: isUrgent ? '#e74c3c' : 'inherit', fontWeight: isUrgent ? 'bold' : 'normal' }}
             aria-label={
               isUrgent
-                ? `Entrega urgente: ${format(parseISO(item.dataEntrega), 'dd/MM/yyyy')}`
-                : `Data de entrega: ${format(parseISO(item.dataEntrega), 'dd/MM/yyyy')}`
+                ? `Entrega urgente: ${format(parseISO(item.deliveryAt), 'dd/MM/yyyy')}`
+                : `Data de entrega: ${format(parseISO(item.deliveryAt), 'dd/MM/yyyy')}`
             }
           >
             <span className="material-icons" style={{ color: isUrgent ? '#e74c3c' : 'inherit' }} aria-hidden="true">
               event
             </span>
-            {format(parseISO(item.dataEntrega), 'dd/MM/yyyy')}
+            {format(parseISO(item.deliveryAt), 'dd/MM/yyyy')}
           </span>
         </div>
 
@@ -199,14 +202,14 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
 };
 
 interface KanbanColumnProps {
-  column: KanbanColumn;
+  stage: Stage;
   cards: Solicitacao[];
   onCardClick: (item: Solicitacao) => void;
 }
 
-const KanbanColumnComponent = ({ column, cards, onCardClick }: KanbanColumnProps) => {
+const KanbanColumnComponent = ({ stage, cards, onCardClick }: KanbanColumnProps) => {
   const { isOver, setNodeRef } = useDroppable({
-    id: column.status,
+    id: stage.id,
   });
 
   const style = {
@@ -220,10 +223,10 @@ const KanbanColumnComponent = ({ column, cards, onCardClick }: KanbanColumnProps
     <div className="kanban-column">
       <div className="kanban-column-header">
         <div className="header-title-row">
-          <span className="column-title">{column.title}</span>
+          <span className="column-title">{stage.name}</span>
           <span className="column-count">{cards.length}</span>
         </div>
-        <div className="header-color-bar" style={{ backgroundColor: column.color }} />
+        <div className="header-color-bar" style={{ backgroundColor: getStageColor(stage.name) }} />
       </div>
 
       <div className="kanban-column-content" ref={setNodeRef} style={style}>
@@ -238,60 +241,17 @@ const KanbanColumnComponent = ({ column, cards, onCardClick }: KanbanColumnProps
 export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
+  const [stages, setStages] = useState<Stage[]>([]);
 
-  const statusLabel = (s: Solicitacao['status']) => {
-    switch (s) {
-      case 'todo':
-        return 'Pendente';
-      case 'fazendo':
-        return 'Fazendo';
-      case 'done':
-        return 'Concluído';
-      case 'archived':
-        return 'Arquivado';
-      case 'video-materiais':
-        return 'Vídeos/Matérias';
-      case 'cobertura-eventos':
-        return 'Cobertura de Eventos';
-      case 'arte':
-        return 'Arte';
-      case 'aprovacao':
-        return 'A Aprovar';
-      case 'parado':
-        return 'Parado';
-      default:
-        return s;
+  const fetchStagesData = async () => {
+    try {
+      const response = await axios.get('/api/stages', { params: { boardKey: 'default', active: true } });
+      return response.data as Stage[];
+    } catch (error) {
+      console.error('Error fetching stages:', error);
+      return [];
     }
   };
-
-  const appendObservacao = (card: Solicitacao, from: Solicitacao['status'], to: Solicitacao['status']) => {
-    const timestamp = format(new Date(), 'dd MMM yyyy HH:mm', { locale: ptBR });
-    let text = '';
-    if (to === 'todo') {
-      text = 'Solicitação reaberta.';
-    } else if (to === 'fazendo') {
-      text = 'Fazendo';
-    } else if (to === 'done') {
-      text = 'Solicitação Concluída';
-    } else if (to === 'archived') {
-      text = 'Arquivado';
-    } else {
-      text = `Status alterado: ${statusLabel(from)} → ${statusLabel(to)}`;
-    }
-    const msg = `[${timestamp}] ${text}`;
-    return card.observacoes ? `${card.observacoes}\n${msg}` : msg;
-  };
-
-  const columns: KanbanColumn[] = [
-    { id: 'todo', title: 'Novas solicitações', status: 'todo', color: '#fbbf24' },
-    { id: 'video-materiais', title: 'Videos/Matérias', status: 'video-materiais', color: '#3b82f6' },
-    { id: 'cobertura-eventos', title: 'Cobertura de Eventos', status: 'cobertura-eventos', color: '#8b5cf6' },
-    { id: 'arte', title: 'Arte', status: 'arte', color: '#ec4899' },
-    { id: 'fazendo', title: 'Fazendo', status: 'fazendo', color: '#0ea5e9' },
-    { id: 'aprovacao', title: 'A Aprovar', status: 'aprovacao', color: '#10b981' },
-    { id: 'parado', title: 'Parado', status: 'parado', color: '#ef4444' },
-    { id: 'done', title: 'Concluído', status: 'done', color: '#34d399' },
-  ];
 
   const fetchCardsData = async () => {
     try {
@@ -312,8 +272,10 @@ export function Dashboard() {
     let isMounted = true;
     const loadData = async () => {
       const data = await fetchCardsData();
+      const stageData = await fetchStagesData();
       if (isMounted) {
         setSolicitacoes(data);
+        setStages(stageData);
       }
     };
 
@@ -325,9 +287,9 @@ export function Dashboard() {
     };
   }, []);
 
-  const getCardsByStatus = (status: string) => {
+  const getCardsByStageId = (stageId: string) => {
     return solicitacoes
-      .filter((item) => item.status === status)
+      .filter((item) => !item.archivedAt && item.stageId === stageId)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
@@ -358,22 +320,20 @@ export function Dashboard() {
     const activeCard = solicitacoes.find((s) => s.id === activeId);
     if (!activeCard) return;
 
-    const sourceStatus = activeCard.status;
-    const destinationStatus = overId as Solicitacao['status'];
+    if (activeCard.stageId === overId) return;
 
-    if (sourceStatus === destinationStatus) return;
-
-    const newObs = appendObservacao(activeCard, sourceStatus, destinationStatus);
-    setSolicitacoes((prev) => prev.map((item) => (item.id === activeId ? { ...item, status: destinationStatus, observacoes: newObs } : item)));
+    setSolicitacoes((prev) => prev.map((item) => (item.id === activeId ? { ...item, stageId: overId } : item)));
 
     try {
-      await axios.put(`/api/cards/${activeId}/status`, { status: destinationStatus, observacoes: newObs });
+      const response = await axios.put(`/api/cards/${activeId}/status`, { stageId: overId });
+      const normalized = normalizeCardsFromApi([response.data as unknown])[0] as Solicitacao;
+      setSolicitacoes((prev) => prev.map((item) => (item.id === activeId ? { ...item, ...normalized } : item)));
       toast.success('Status atualizado!');
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erro ao atualizar status.');
       setSolicitacoes((prev) =>
-        prev.map((item) => (item.id === activeId ? { ...item, status: sourceStatus, observacoes: activeCard.observacoes } : item))
+        prev.map((item) => (item.id === activeId ? { ...item, stageId: activeCard.stageId } : item))
       );
     }
   };
@@ -384,9 +344,12 @@ export function Dashboard() {
     <div className="dashboard-container">
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div className="kanban-board">
-          {columns.map((column) => (
-            <KanbanColumnComponent key={column.id} column={column} cards={getCardsByStatus(column.status)} onCardClick={setSelectedCard} />
-          ))}
+          {stages
+            .slice()
+            .sort((a, b) => a.order - b.order)
+            .map((stage) => (
+              <KanbanColumnComponent key={stage.id} stage={stage} cards={getCardsByStageId(stage.id)} onCardClick={setSelectedCard} />
+            ))}
         </div>
 
         {createPortal(
@@ -400,30 +363,39 @@ export function Dashboard() {
       {selectedCard && (
         <CardDetailsModal
           card={selectedCard}
+          stages={stages}
           onClose={() => setSelectedCard(null)}
-          onStatusChange={(id, status) => {
-            const card = solicitacoes.find((s) => s.id === id);
-            const fromStatus = card?.status ?? 'todo';
-            const toStatus = status as Solicitacao['status'];
-            const newObs = card ? appendObservacao(card, fromStatus, toStatus) : undefined;
-
-            setSolicitacoes((prev) =>
-              prev.map((item) => (item.id === id ? { ...item, status: toStatus, observacoes: newObs ?? item.observacoes } : item))
-            );
-
-            const updateStatus = async () => {
-              try {
-                await axios.put(`/api/cards/${id}/status`, { status: toStatus, observacoes: newObs });
-                toast.success('Status atualizado com sucesso!');
-                setSelectedCard(null);
-              } catch (error) {
-                console.error('Error updating status:', error);
-                toast.error('Erro ao atualizar status.');
-                const data = await fetchCardsData();
-                setSolicitacoes(data);
+          onAction={(id, action) => {
+            const { todoId } = getDefaultStageIds(stages);
+            const update = async () => {
+              if (action.type === 'move') {
+                await axios.put(`/api/cards/${id}/status`, { stageId: action.stageId });
+                return;
+              }
+              if (action.type === 'archive') {
+                await axios.put(`/api/cards/${id}/status`, { archived: true });
+                return;
+              }
+              if (action.type === 'reopen') {
+                if (!todoId) {
+                  throw new Error('Stage TODO não encontrada');
+                }
+                await axios.put(`/api/cards/${id}/status`, { archived: false, stageId: todoId });
               }
             };
-            updateStatus();
+
+            void update()
+              .then(async () => {
+                toast.success('Atualizado!');
+                const response = await axios.get(`/api/cards/${id}`);
+                setSelectedCard(response.data as Solicitacao);
+                const data = await fetchCardsData();
+                setSolicitacoes(data);
+              })
+              .catch((error) => {
+                console.error('Error updating status:', error);
+                toast.error('Erro ao atualizar.');
+              });
           }}
         />
       )}
