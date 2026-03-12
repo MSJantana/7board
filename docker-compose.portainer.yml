@@ -62,6 +62,15 @@ services:
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
       SEED_ADMIN_RESET_PASSWORD: ${SEED_ADMIN_RESET_PASSWORD:-false}
+      SMTP_ENABLED: ${SMTP_ENABLED:-true}
+      SMTP_DEBUG: ${SMTP_DEBUG:-false}
+      SMTP_VERIFY_ON_START: ${SMTP_VERIFY_ON_START:-false}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM:-"Midia Flow <noreply@sevenboard.com>"}
     volumes:
       - uploads_data:/app/uploads
 
