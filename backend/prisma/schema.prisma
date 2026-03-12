@@ -47,7 +47,7 @@ model Solicitacao {
   email           String?
   protocolo       String?
   tipoSolicitacao String
-  descricao       String
+  descricao       String   @db.LongText
   veiculacao      Json
   observacoes     String?  @db.LongText
   arquivoUrl      String?

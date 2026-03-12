@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow, parseISO, isToday, differenceInHours, isValid } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { Stage } from '../services/stageUtils';
 
 export interface Notification {
   id: string;
@@ -22,10 +23,11 @@ interface Solicitacao {
   email?: string;
   tipoSolicitacao: string;
   descricao: string;
-  status: string;
   createdAt: string;
-  dataEntrega: string;
-  horarioEntrega?: string;
+  deliveryAt: string;
+  archivedAt?: string | null;
+  stageId: string;
+  stage?: Stage | null;
 }
 
 const STORAGE_KEY = 'sevenboard_read_notifications';
@@ -48,10 +50,17 @@ export function useNotifications() {
       const response = await axios.get('/api/cards');
       const cards: Solicitacao[] = response.data;
 
-      const newCards = cards.filter((card) => card.status === 'todo');
-      const urgentCards = cards.filter(
-        (card) => !['done', 'archived', 'concluido'].includes(card.status) && isValid(parseISO(card.dataEntrega))
+      const activeCards = cards.filter((card) => !card.archivedAt);
+      const newCards = activeCards.filter(
+        (card) => (card.stage?.kind ?? 'TODO') === 'TODO' || card.stage?.name === 'Novas solicitações'
       );
+      const urgentCards = activeCards.filter((card) => {
+        if (!card.deliveryAt) return false;
+        const d = parseISO(card.deliveryAt);
+        if (!isValid(d)) return false;
+        if (card.stage?.kind === 'DONE' || card.stage?.name === 'Concluído') return false;
+        return true;
+      });
 
       const readIds = getReadIds();
 
@@ -75,15 +84,7 @@ export function useNotifications() {
 
       const deadlineNotifications: Notification[] = urgentCards
         .map((card) => {
-          const deliveryDate = parseISO(card.dataEntrega);
-          const targetDate = deliveryDate;
-          if (card.horarioEntrega) {
-            const [h, m] = card.horarioEntrega.split(':').map(Number);
-            targetDate.setHours(h || 0, m || 0, 0, 0);
-          } else {
-            targetDate.setHours(23, 59, 59, 999);
-          }
-
+          const targetDate = parseISO(card.deliveryAt);
           const hoursLeft = differenceInHours(targetDate, new Date());
 
           if (hoursLeft < 24 && hoursLeft > -48) {

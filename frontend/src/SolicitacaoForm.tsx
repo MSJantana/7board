@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ASRSLogo } from './components/ASRSLogo';
@@ -38,6 +38,7 @@ export function SolicitacaoForm() {
     horarioEntrega: '',
     observacoes: ''
   });
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
   const [arquivo, setArquivo] = useState<File | null>(null);
 
   useEffect(() => {
@@ -309,20 +310,41 @@ export function SolicitacaoForm() {
 
               <div className="form-group">
                 <label>
-                  <span className="material-symbols-rounded" aria-hidden="true">event</span>{' '}
+                  <span className="material-icons calendar-label-icon" aria-hidden="true">calendar_month</span>{' '}
                   Data e Hora de Entrega
                 </label>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <input
-                    type="date"
-                    name="dataEntrega"
-                    value={formData.dataEntrega}
-                    onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
-                    required
-                    className="form-control"
-                    style={{ flex: 1 }}
-                  />
+                  <div className="date-input-wrapper" style={{ flex: 1 }}>
+                    <input
+                      type="date"
+                      name="dataEntrega"
+                      value={formData.dataEntrega}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                      className="form-control date-input"
+                      ref={dateInputRef}
+                    />
+                    <button
+                      type="button"
+                      className="date-picker-button"
+                      aria-label="Abrir calendário"
+                      onClick={() => {
+                        const el = dateInputRef.current;
+                        if (!el) return;
+                        const withPicker = el as HTMLInputElement & { showPicker?: () => void };
+                        if (typeof withPicker.showPicker === 'function') {
+                          withPicker.showPicker();
+                          return;
+                        }
+                        el.focus();
+                      }}
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        calendar_month
+                      </span>
+                    </button>
+                  </div>
                   <input
                     type="time"
                     name="horarioEntrega"

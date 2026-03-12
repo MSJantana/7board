@@ -128,6 +128,58 @@
   gap: 4px; /* Reduced gap */
 }
 
+.calendar-label-icon {
+  font-size: 20px;
+  vertical-align: middle;
+}
+
+.date-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-control.date-input {
+  padding-right: 42px;
+}
+
+.date-picker-button {
+  position: absolute;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.date-picker-button:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.date-input-wrapper input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 42px;
+  height: 100%;
+  cursor: pointer;
+}
+
+.date-input-wrapper input[type='date']::-webkit-inner-spin-button {
+  display: none;
+}
+
+.date-input-wrapper input[type='date']::-moz-calendar-picker-indicator {
+  opacity: 0;
+}
+
 .form-group label {
   font-weight: 600;
   font-size: 0.9rem; /* Reduced size */
