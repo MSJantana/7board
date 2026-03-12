@@ -1,14 +1,90 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com', // Exemplo: smtp.gmail.com
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false, // true para 465, false para outras portas
-  auth: {
-    user: process.env.SMTP_USER || 'seu-email@gmail.com',
-    pass: process.env.SMTP_PASS || 'sua-senha-de-app',
-  },
-});
+const smtpEnabled = String(process.env.SMTP_ENABLED ?? 'true').toLowerCase() === 'true';
+const smtpSecure = String(process.env.SMTP_SECURE ?? '').toLowerCase() === 'true';
+const smtpPassRaw = process.env.SMTP_PASS ?? '';
+const smtpPass = smtpPassRaw.replaceAll(/\s+/g, '');
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+const smtpPort = Number(process.env.SMTP_PORT) || (smtpSecure ? 465 : 587);
+const smtpUser = process.env.SMTP_USER || '';
+const smtpDebug = String(process.env.SMTP_DEBUG ?? 'false').toLowerCase() === 'true';
+const smtpVerifyOnStart = String(process.env.SMTP_VERIFY_ON_START ?? 'false').toLowerCase() === 'true';
+
+const maskEmail = (value: string) => {
+  const v = String(value || '').trim();
+  const at = v.indexOf('@');
+  if (at <= 1) return v ? `${v[0]}***` : '';
+  const local = v.slice(0, at);
+  const domain = v.slice(at);
+  return `${local[0]}***${domain}`;
+};
+
+const transporter = smtpEnabled
+  ? nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    })
+  : null;
+
+let smtpWarnedDisabled = false;
+let smtpVerified = false;
+let smtpVerifying = false;
+
+const verifyTransporterOnce = async () => {
+  if (!transporter) return;
+  if (smtpVerified || smtpVerifying) return;
+  smtpVerifying = true;
+  try {
+    await transporter.verify();
+    smtpVerified = true;
+    if (smtpDebug) {
+      console.log('[SMTP] verify OK', {
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        user: maskEmail(smtpUser),
+        passLength: smtpPass.length,
+      });
+    }
+  } catch (error: any) {
+    if (smtpDebug) {
+      console.error('[SMTP] verify FAIL', {
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        user: maskEmail(smtpUser),
+        passLength: smtpPass.length,
+        code: error?.code,
+        responseCode: error?.responseCode,
+        message: error?.message,
+      });
+    }
+  } finally {
+    smtpVerifying = false;
+  }
+};
+
+if (transporter && smtpDebug) {
+  console.log('[SMTP] config', {
+    enabled: smtpEnabled,
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
+    user: maskEmail(smtpUser),
+    passLength: smtpPass.length,
+    from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
+    verifyOnStart: smtpVerifyOnStart,
+  });
+}
+
+if (transporter && smtpVerifyOnStart) {
+  void verifyTransporterOnce();
+}
 
 const formatDateTime = (value: any): string => {
   if (!value) return '-';
@@ -198,8 +274,16 @@ export const sendSolicitacaoEmail = async (to: string, solicitacaoData: any) => 
     console.log('Email não fornecido, pulando envio.');
     return;
   }
+  if (!transporter) {
+    if (!smtpWarnedDisabled) {
+      smtpWarnedDisabled = true;
+      console.log('[SMTP] envio desabilitado (SMTP_ENABLED=false)');
+    }
+    return null;
+  }
 
   try {
+    await verifyTransporterOnce();
     const html = buildTicketEmail({
       title: 'Sucesso! Sua solicitação foi registrada.',
       subtitle: 'Use o protocolo para acompanhar sua solicitação.',
@@ -220,7 +304,17 @@ export const sendSolicitacaoEmail = async (to: string, solicitacaoData: any) => 
     console.log('Email enviado com sucesso: %s', info.messageId);
     return info;
   } catch (error) {
-    console.error('Erro ao enviar email:', error);
+    console.error('Erro ao enviar email:', {
+      to: maskEmail(to),
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      user: maskEmail(smtpUser),
+      passLength: smtpPass.length,
+      code: (error as any)?.code,
+      responseCode: (error as any)?.responseCode,
+      message: (error as any)?.message,
+    });
     // Retornamos null mas não lançamos erro para não impedir a criação do card
     return null;
   }
@@ -231,8 +325,12 @@ export const sendConclusaoEmail = async (to: string, solicitacaoData: any) => {
     console.log('Email não fornecido, pulando envio de conclusão.');
     return;
   }
+  if (!transporter) {
+    return null;
+  }
 
   try {
+    await verifyTransporterOnce();
     const html = buildTicketEmail({
       title: 'Sua solicitação foi concluída.',
       subtitle: 'Confira abaixo os detalhes da entrega.',
@@ -263,8 +361,12 @@ export const sendReaberturaEmail = async (to: string, solicitacaoData: any) => {
     console.log('Email não fornecido, pulando envio de reabertura.');
     return;
   }
+  if (!transporter) {
+    return null;
+  }
 
   try {
+    await verifyTransporterOnce();
     const html = buildTicketEmail({
       title: 'Sua solicitação foi reaberta.',
       subtitle: 'Ela voltou para a fila de atendimento.',
