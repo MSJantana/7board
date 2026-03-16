@@ -300,6 +300,25 @@ export function AdminTopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => v
                   </div>
                 )}
                 {user && <div className="user-dropdown-divider" />}
+                {user && (
+                  <>
+                    <button
+                      className="user-dropdown-item"
+                      role="menuitem"
+                      onClick={() => {
+                        setShowUserDropdown(false);
+                        navigate('/solicitacoes');
+                      }}
+                      type="button"
+                    >
+                      <span className="material-icons" aria-hidden="true">
+                        assignment
+                      </span>
+                      <span className="user-dropdown-label">Voltar ao Formulário</span>
+                    </button>
+                    <div className="user-dropdown-divider" />
+                  </>
+                )}
                 {user ? (
                   <button
                     className="user-dropdown-item danger"

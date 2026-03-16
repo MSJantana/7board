@@ -72,6 +72,18 @@ export function TopHeader({ onMenuClick }: Readonly<{ onMenuClick?: () => void }
               )}
               {user && <div className="user-dropdown-divider"></div>}
               {user ? (
+                <>
+                  <button
+                    className="user-dropdown-item"
+                    role="menuitem"
+                    onClick={() => navigate('/admin')}
+                  >
+                    <span className="material-icons">dashboard</span> Ir ao Dashboard
+                  </button>
+                  <div className="user-dropdown-divider"></div>
+                </>
+              ) : null}
+              {user ? (
                 <button className="user-dropdown-item" role="menuitem" onClick={logout}>
                   <span className="material-icons">logout</span> Sair
                 </button>
