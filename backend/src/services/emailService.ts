@@ -391,3 +391,49 @@ export const sendReaberturaEmail = async (to: string, solicitacaoData: any) => {
     return null;
   }
 };
+
+export const sendProducaoEmail = async (to: string, solicitacaoData: any) => {
+  if (!to) {
+    console.log('Email não fornecido, pulando envio de produção.');
+    return;
+  }
+  if (!transporter) {
+    return null;
+  }
+
+  try {
+    await verifyTransporterOnce();
+    const html = buildTicketEmail({
+      title: 'Sua solicitação entrou em produção.',
+      subtitle: 'Nossa equipe já iniciou o atendimento.',
+      statusText: 'Em produção',
+      statusDateLabel: 'Início da produção',
+      statusDateValue: formatDateTime(solicitacaoData.startedAt || new Date()),
+      primaryColor: '#0ea5e9',
+      solicitacao: solicitacaoData,
+    });
+
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
+      to: to,
+      subject: `Em Produção: ${solicitacaoData.protocolo || solicitacaoData.tipoSolicitacao}`,
+      html,
+    });
+
+    console.log('Email de produção enviado com sucesso: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Erro ao enviar email de produção:', {
+      to: maskEmail(to),
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      user: maskEmail(smtpUser),
+      passLength: smtpPass.length,
+      code: (error as any)?.code,
+      responseCode: (error as any)?.responseCode,
+      message: (error as any)?.message,
+    });
+    return null;
+  }
+};

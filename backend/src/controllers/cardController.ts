@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import fs from 'node:fs';
 import prisma from '../config/database';
-import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail } from '../services/emailService';
+import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail, sendProducaoEmail } from '../services/emailService';
 
 const legacyStatusToStageName: Record<string, string> = {
   todo: 'Novas solicitações',
@@ -82,7 +82,7 @@ const generateProtocol = (veiculacaoParsed: string[], departamento: string, deli
 
   const dateStr = `${String(deliveryAt.getDate()).padStart(2, '0')}${String(deliveryAt.getMonth() + 1).padStart(2, '0')}${deliveryAt.getFullYear()}`;
 
-  return `7BD-${veiculacaoInitials}-${deptInitials}-${dateStr}`;
+  return `MFL-${veiculacaoInitials}-${deptInitials}-${dateStr}`;
 };
 
 export const createCard = async (req: Request, res: Response): Promise<void> => {
@@ -294,12 +294,16 @@ export const updateCardStatus = async (req: Request, res: Response) => {
     }
 
     if (desiredStageKind === 'IN_PROGRESS') {
-      updateData.startedAt = now;
+      if (!currentCard.startedAt) {
+        updateData.startedAt = now;
+      }
       if (!currentCard.firstRespondedAt) {
         updateData.firstRespondedAt = now;
       }
     } else if (desiredStageKind === 'DONE') {
-      updateData.completedAt = now;
+      if (!currentCard.completedAt) {
+        updateData.completedAt = now;
+      }
     }
 
     const updatedSolicitacao = await prisma.solicitacao.update({
@@ -331,6 +335,12 @@ export const updateCardStatus = async (req: Request, res: Response) => {
     if (!currentCard.completedAt && updateData.completedAt && updatedSolicitacao.email) {
       sendConclusaoEmail(updatedSolicitacao.email, updatedSolicitacao).catch((err) =>
         console.error('Falha no envio de email de conclusão:', err)
+      );
+    }
+
+    if (!currentCard.startedAt && updateData.startedAt && updatedSolicitacao.email) {
+      sendProducaoEmail(updatedSolicitacao.email, updatedSolicitacao).catch((err) =>
+        console.error('Falha no envio de email de produção:', err)
       );
     }
 
