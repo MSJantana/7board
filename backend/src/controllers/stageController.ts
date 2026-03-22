@@ -17,7 +17,11 @@ export const getStages = async (req: Request, res: Response) => {
     res.json(stages);
   } catch (error) {
     console.error('Error fetching stages:', error);
+    const code = (error as any)?.code;
+    if (code === 'P1001') {
+      res.status(503).json({ error: 'Banco de dados indisponível. Verifique se o servidor está online e acessível.' });
+      return;
+    }
     res.status(500).json({ error: 'Failed to fetch stages' });
   }
 };
-

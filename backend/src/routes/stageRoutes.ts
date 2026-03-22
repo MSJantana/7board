@@ -4,8 +4,6 @@ import { authenticateToken } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-router.use(authenticateToken);
-router.get('/stages', getStages);
+router.get('/stages', authenticateToken, getStages);
 
 export default router;
-

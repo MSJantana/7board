@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import fs from 'node:fs';
+import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 import prisma from '../config/database';
-import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail, sendProducaoEmail } from '../services/emailService';
+import { sendSolicitacaoEmail, sendConclusaoEmail, sendReaberturaEmail, sendProducaoEmail, sendAprovacaoEmail } from '../services/emailService';
+
+const APPROVAL_TOKEN_SECRET = process.env.APPROVAL_TOKEN_SECRET || process.env.JWT_SECRET || 'secret_key_default';
 
 const legacyStatusToStageName: Record<string, string> = {
   todo: 'Novas solicitações',
@@ -367,5 +371,142 @@ export const getCardById = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching card details:', error);
     res.status(500).json({ error: 'Failed to fetch card details' });
+  }
+};
+
+export const sendApprovalEmail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { link, links, message } = req.body as { link?: string; links?: unknown; message?: string };
+
+  const normalizedMessage = typeof message === 'string' ? message.trim() : '';
+
+  const normalizedLinks = (() => {
+    if (Array.isArray(links)) {
+      return links
+        .filter((v) => typeof v === 'string')
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    const single = typeof link === 'string' ? link.trim() : '';
+    return single ? [single] : [];
+  })();
+
+  if (normalizedLinks.length === 0) {
+    return res.status(400).json({ error: 'Informe ao menos um link' });
+  }
+
+  try {
+    const card = await prisma.solicitacao.findUnique({
+      where: { id: String(id) },
+      include: { stage: true },
+    });
+
+    if (!card) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    const stageName = card.stage?.name ?? '';
+    const stageKind = card.stage?.kind ?? null;
+    const allowed = stageName === 'A Aprovar' || stageKind === 'VALIDATION';
+    if (!allowed) {
+      return res.status(400).json({ error: 'Card não está na etapa de aprovação' });
+    }
+
+    if (!card.email) {
+      return res.status(400).json({ error: 'Solicitação não possui email' });
+    }
+
+    const actorId = (req as any).user?.userId ? String((req as any).user.userId) : null;
+
+    const publicBaseUrl = String(process.env.APP_PUBLIC_URL || '').trim();
+    if (!publicBaseUrl) {
+      return res.status(400).json({ error: 'APP_PUBLIC_URL não configurado' });
+    }
+    const approvalTokenId = crypto.randomUUID();
+    const token = jwt.sign(
+      { cardId: card.id, email: card.email, purpose: 'approval', tokenId: approvalTokenId },
+      APPROVAL_TOKEN_SECRET,
+      { expiresIn: '30d' }
+    );
+    const approvalUrl = `${publicBaseUrl.replace(/\/+$/, '')}/approval/${card.id}?token=${encodeURIComponent(token)}`;
+
+    const info = await sendAprovacaoEmail(card.email, card, {
+      links: normalizedLinks,
+      message: normalizedMessage,
+      approvalUrl,
+    });
+
+    await prisma.solicitacao.update({
+      where: { id: card.id },
+      data: {
+        approvalLinks: normalizedLinks as any,
+      },
+    });
+
+    await prisma.solicitacaoActivity.create({
+      data: {
+        solicitacaoId: card.id,
+        type: 'NOTE',
+        message: 'Email de aprovação enviado.',
+        data: {
+          links: normalizedLinks,
+          message: normalizedMessage || null,
+          approvalUrl: approvalUrl || null,
+          approvalTokenId,
+        },
+        actorId,
+      },
+    });
+
+    return res.json({ ok: true, messageId: (info as any)?.messageId ?? null, approvalUrl: approvalUrl || null });
+  } catch (error) {
+    console.error('Erro ao enviar email de aprovação:', error);
+    return res.status(500).json({ error: 'Falha ao enviar email de aprovação' });
+  }
+};
+
+export const getApprovalHistory = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const activities = await prisma.solicitacaoActivity.findMany({
+      where: { solicitacaoId: String(id) },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      include: {
+        actor: { select: { name: true, email: true } },
+      },
+    });
+
+    const relevant = activities.filter((a) => {
+      if (a.type === 'COMMENT') {
+        const status = (a.data as any)?.approvalStatus;
+        return status === 'APPROVED' || status === 'CHANGES_REQUESTED' || status === 'PENDING';
+      }
+      if (a.type === 'NOTE') {
+        return a.message === 'Email de aprovação enviado.' || a.message === 'Prazo alterado.';
+      }
+      return false;
+    });
+
+    const response = relevant.map((a) => {
+      const data = (a.data as any) ?? {};
+      return {
+        id: a.id,
+        createdAt: a.createdAt,
+        type: a.type,
+        message: a.message ?? '',
+        actorName: a.actor?.name ?? null,
+        actorEmail: a.actor?.email ?? null,
+        approvalStatus: typeof data.approvalStatus === 'string' ? data.approvalStatus : null,
+        comment: typeof data.comment === 'string' ? data.comment : null,
+        links: Array.isArray(data.links) ? data.links : null,
+        approvalUrl: typeof data.approvalUrl === 'string' ? data.approvalUrl : null,
+      };
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching approval history:', error);
+    res.status(500).json({ error: 'Failed to fetch approval history' });
   }
 };

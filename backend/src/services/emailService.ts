@@ -437,3 +437,107 @@ export const sendProducaoEmail = async (to: string, solicitacaoData: any) => {
     return null;
   }
 };
+
+const buildApprovalEmail = (opts: { solicitacao: any; links: string[]; message?: string; approvalUrl?: string }) => {
+  const s = opts.solicitacao || {};
+  const protocolo = s.protocolo || 'N/A';
+  const tipo = s.tipoSolicitacao || '-';
+  const departamento = s.departamento || '-';
+  const deliveryAt = s.deliveryAt ? formatDateTime(s.deliveryAt) : '-';
+  const message = String(opts.message || '').trim();
+  const approvalUrl = String(opts.approvalUrl || '').trim();
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { margin: 0; padding: 0; background-color: #f4f4f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .wrapper { width: 100%; padding: 32px 16px; box-sizing: border-box; }
+        .card { max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 28px; }
+        h1 { margin: 0 0 8px 0; font-size: 20px; color: #0f172a; }
+        p { margin: 0; color: #334155; line-height: 1.55; }
+        .meta { margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; }
+        .meta-row { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 13px; color: #475569; }
+        .meta-row strong { color: #0f172a; }
+        .btn { display: inline-block; margin-top: 18px; background: #10b981; color: #ffffff !important; text-decoration: none; padding: 12px 14px; border-radius: 12px; font-weight: 800; }
+        .message { margin-top: 18px; padding: 14px; border-radius: 12px; background: #eff6ff; border: 1px solid #bfdbfe; color: #0f172a; white-space: pre-wrap; }
+        .footer { margin-top: 18px; font-size: 12px; color: #94a3b8; }
+      </style>
+    </head>
+    <body>
+      <div class="wrapper">
+        <div class="card">
+          <h1>Sua solicitação está aguardando aprovação</h1>
+          <p>Clique no botão abaixo para abrir a página de aprovação.</p>
+
+          <div class="meta">
+            <div class="meta-row"><strong>Protocolo: </strong><span>${protocolo}</span></div>
+            <div class="meta-row"><strong>Departamento: </strong><span>${departamento}</span></div>
+            <div class="meta-row"><strong>Tipo: </strong><span>${tipo}</span></div>
+            <div class="meta-row"><strong>Entrega: </strong><span>${deliveryAt}</span></div>
+          </div>
+
+          ${message ? `<div class="message">${message}</div>` : ''}
+
+          <a class="btn" href="${approvalUrl}" target="_blank" rel="noopener noreferrer">Abrir página de aprovação</a>
+
+          <div class="footer">Este é um email automático. Não responda a esta mensagem.</div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+export const sendAprovacaoEmail = async (
+  to: string,
+  solicitacaoData: any,
+  opts: { links: string[]; message?: string; approvalUrl?: string }
+) => {
+  if (!to) {
+    console.log('Email não fornecido, pulando envio de aprovação.');
+    return;
+  }
+  if (!transporter) {
+    return null;
+  }
+
+  const links = Array.isArray(opts.links) ? opts.links.map((v) => String(v).trim()).filter(Boolean) : [];
+  if (links.length === 0) {
+    return null;
+  }
+  const approvalUrl = String(opts.approvalUrl || '').trim();
+  if (!approvalUrl) {
+    return null;
+  }
+
+  try {
+    await verifyTransporterOnce();
+    const html = buildApprovalEmail({ solicitacao: solicitacaoData, links, message: opts.message, approvalUrl });
+
+    const info = await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"Midia Flow" <noreply@sevenboard.com>',
+      to,
+      subject: `Aprovação: ${solicitacaoData.protocolo || solicitacaoData.tipoSolicitacao}`,
+      html,
+    });
+
+    console.log('Email de aprovação enviado com sucesso: %s', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Erro ao enviar email de aprovação:', {
+      to: maskEmail(to),
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      user: maskEmail(smtpUser),
+      passLength: smtpPass.length,
+      code: (error as any)?.code,
+      responseCode: (error as any)?.responseCode,
+      message: (error as any)?.message,
+    });
+    return null;
+  }
+};

@@ -388,7 +388,7 @@ export function SolicitacoesList() {
                                   const lowerMsg = msg.toLowerCase();
                                   if (lowerMsg.startsWith('etapa alterada')) {
                                     const arrowIdx = msg.indexOf('→');
-                                    const toLabel = arrowIdx !== -1 ? msg.substring(arrowIdx + 1).trim() : msg;
+                                    const toLabel = arrowIdx >= 0 ? msg.substring(arrowIdx + 1).trim() : msg;
                                     const cls = (() => {
                                       const lower = toLabel.toLowerCase();
                                       if (lower.includes('conclu')) return 'done';

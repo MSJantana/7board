@@ -13,6 +13,7 @@
     "db:cleanup": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/003_drop_legacy_solicitacao.sql",
     "db:expand-observacoes": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/004_expand_observacoes.sql",
     "db:expand-descricao": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/005_expand_descricao.sql",
+    "db:approval": "npx prisma db execute --schema prisma/schema.prisma --file prisma/sql/006_add_approval_workflow.sql",
     "db:backfill": "npx ts-node src/scripts/backfillKanbanMetrics.ts"
   },
   "keywords": [],

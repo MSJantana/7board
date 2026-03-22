@@ -27,6 +27,11 @@
   padding: 24px 32px;
   gap: 24px;
   align-items: flex-start;
+  transition: opacity 0.2s ease;
+}
+
+.kanban-board.refreshing {
+  opacity: 0.72;
 }
 
 .kanban-board::-webkit-scrollbar {
@@ -171,6 +176,29 @@
   border-color: #dc2626;
 }
 
+.card-alert {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.card-alert.warning {
+  color: #d97706;
+}
+
+.kanban-card.warning {
+  background-color: #fffbeb;
+  border: 1px solid #f59e0b;
+}
+
+.kanban-card.warning:hover {
+  background-color: #fef3c7;
+  border-color: #d97706;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -201,6 +229,36 @@
   color: #475569;
 }
 
+.approval-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.approval-indicator .material-icons {
+  font-size: 18px;
+}
+
+.approval-indicator.approved {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.approval-indicator.changes {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
 .card-title {
   font-size: 15px;
   font-weight: 600;
@@ -219,6 +277,75 @@
   overflow: hidden;
   margin: 0;
   line-height: 1.5;
+}
+
+.card-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.card-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.card-timeline-track {
+  position: relative;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.card-timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #3b82f6;
+}
+
+.card-timeline-track.overdue .card-timeline-fill {
+  background: #ef4444;
+}
+
+.card-timeline-track.warning .card-timeline-fill {
+  background: #f59e0b;
+}
+
+.card-timeline-dot {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: #0f172a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+}
+
+.card-timeline-dot.start {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.card-timeline-dot.end {
+  right: 0;
+  transform: translate(50%, -50%);
+  background: #64748b;
+}
+
+.card-timeline-dot.end.overdue {
+  background: #ef4444;
+}
+
+.card-timeline-dot.end.warning {
+  background: #f59e0b;
 }
 
 .card-footer {

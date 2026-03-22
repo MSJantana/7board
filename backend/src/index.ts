@@ -9,6 +9,7 @@ import cardRoutes from './routes/cardRoutes';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import stageRoutes from './routes/stageRoutes';
+import approvalRoutes from './routes/approvalRoutes';
 import prisma from './config/database';
 
 const myEnv = dotenv.config();
@@ -28,6 +29,7 @@ app.use('/api', cardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api', stageRoutes);
+app.use('/api/approval', approvalRoutes);
 
 type StageSeed = {
   name: string;
