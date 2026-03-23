@@ -356,7 +356,8 @@ export function CardDetailsModal({ card, onClose, onAction, stages }: Readonly<C
                 <button
                   className="approval-send-btn"
                   type="button"
-                  disabled={sendingApproval}
+                  disabled={sendingApproval || card.approvalStatus === 'APPROVED'}
+                  title={card.approvalStatus === 'APPROVED' ? 'Projeto já aprovado. Não é necessário reenviar o email.' : undefined}
                   onClick={async () => {
                     if (!card.email) {
                       toast.error('Esta solicitação não possui email.');
@@ -415,7 +416,7 @@ export function CardDetailsModal({ card, onClose, onAction, stages }: Readonly<C
                         }
                       })();
                       let kind: 'approved' | 'changes' | 'edited' | 'sent' = 'sent';
-                      let title = 'Enviar para aprovação';
+                      let title = 'Enviou para aprovação';
                       if (item.approvalStatus === 'APPROVED') {
                         kind = 'approved';
                         title = 'Aprovou o projeto final';

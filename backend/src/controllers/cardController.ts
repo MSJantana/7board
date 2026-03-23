@@ -412,6 +412,10 @@ export const sendApprovalEmail = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Card não está na etapa de aprovação' });
     }
 
+    if (card.approvalStatus === 'APPROVED') {
+      return res.status(409).json({ error: 'Projeto já aprovado. Não é necessário reenviar o email.' });
+    }
+
     if (!card.email) {
       return res.status(400).json({ error: 'Solicitação não possui email' });
     }

@@ -37,6 +37,7 @@ export function Approval() {
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedDecision, setSubmittedDecision] = useState<'APPROVED' | 'CHANGES_REQUESTED' | null>(null);
 
   const formattedDelivery = useMemo(() => {
     if (!card?.deliveryAt) return '';
@@ -127,6 +128,9 @@ export function Approval() {
     try {
       await axios.post('/api/approval/respond', { token, decision, comment });
       setSubmitted(true);
+      setSubmittedDecision(decision);
+      setComment('');
+      setLinks([]);
       toast.success(decision === 'APPROVED' ? 'Aprovado com sucesso!' : 'Ajustes enviados com sucesso!');
     } catch (error) {
       console.error('Error submitting approval:', error);
@@ -135,6 +139,29 @@ export function Approval() {
       setSubmitting(false);
     }
   };
+
+  if (submitted) {
+    const decisionLabel =
+      submittedDecision === 'APPROVED'
+        ? 'Aprovação registrada.'
+        : submittedDecision === 'CHANGES_REQUESTED'
+          ? 'Solicitação de ajustes registrada.'
+          : 'Resposta registrada.';
+
+    return (
+      <div className="approval-page">
+        <div className="approval-card">
+          <div className="approval-header">
+            <h1>Solicitação enviada</h1>
+            <div className="approval-badge status-approved">OK</div>
+          </div>
+          <div className="approval-success">
+            {decisionLabel} Você pode fechar esta página.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="approval-page">
@@ -217,12 +244,6 @@ export function Approval() {
             <span>Solicitar ajustes</span>
           </button>
         </div>
-
-        {submitted && (
-          <div className="approval-success">
-            Resposta enviada. Você pode fechar esta página.
-          </div>
-        )}
       </div>
     </div>
   );

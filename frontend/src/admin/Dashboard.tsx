@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { format, parseISO, isValid, differenceInHours } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -290,12 +290,38 @@ const KanbanColumnComponent = ({ stage, cards, onCardClick }: KanbanColumnProps)
   const { isOver, setNodeRef } = useDroppable({
     id: stage.id,
   });
+  const contentRef = useRef<HTMLDivElement | null>(null);
 
   const style = {
     backgroundColor: isOver ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
     transition: 'background-color 0.2s ease',
     minHeight: '150px',
     border: isOver ? '2px dashed #3b82f6' : '2px dashed transparent',
+  };
+
+  useEffect(() => {
+    const handle = globalThis.requestAnimationFrame(() => {
+      const el = contentRef.current;
+      if (!el) return;
+      if (cards.length < 3) {
+        el.style.maxHeight = '';
+        return;
+      }
+      const cardEls = Array.from(el.querySelectorAll<HTMLElement>('.kanban-card'));
+      if (cardEls.length < 3) return;
+      const third = cardEls[2];
+      const styles = globalThis.getComputedStyle(el);
+      const paddingBottom = Number.parseFloat(styles.paddingBottom || '0') || 0;
+      const next = third.offsetTop + third.offsetHeight + paddingBottom;
+      el.style.maxHeight = `${next}px`;
+    });
+
+    return () => globalThis.cancelAnimationFrame(handle);
+  }, [cards]);
+
+  const setColumnNode = (node: HTMLDivElement | null) => {
+    setNodeRef(node);
+    contentRef.current = node;
   };
 
   return (
@@ -308,7 +334,11 @@ const KanbanColumnComponent = ({ stage, cards, onCardClick }: KanbanColumnProps)
         <div className="header-color-bar" style={{ backgroundColor: getStageColor(stage.name) }} />
       </div>
 
-      <div className="kanban-column-content" ref={setNodeRef} style={style}>
+      <div
+        className={`kanban-column-content ${cards.length >= 3 ? 'scroll-after-3' : ''}`}
+        ref={setColumnNode}
+        style={style}
+      >
         {cards.map((item) => (
           <KanbanCardComponent key={item.id} item={item} onCardClick={onCardClick} />
         ))}
@@ -322,6 +352,13 @@ export function Dashboard() {
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
   const [stages, setStages] = useState<Stage[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add('dashboard-no-scroll');
+    return () => {
+      document.body.classList.remove('dashboard-no-scroll');
+    };
+  }, []);
 
   const fetchStagesData = async () => {
     try {
