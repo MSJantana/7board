@@ -1,0 +1,6 @@
+ALTER TABLE `Solicitacao`
+  ADD COLUMN `approvalStatus` ENUM('PENDING','APPROVED','CHANGES_REQUESTED') NOT NULL DEFAULT 'PENDING',
+  ADD COLUMN `approvalMessage` LONGTEXT NULL,
+  ADD COLUMN `approvalLinks` JSON NULL,
+  ADD COLUMN `approvalUpdatedAt` DATETIME(3) NULL;
+

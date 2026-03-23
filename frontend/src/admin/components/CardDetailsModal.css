@@ -183,6 +183,240 @@
   background: #f8fafc;
 }
 
+.approval-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.approval-add-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.approval-add-btn:hover {
+  background: #f8fafc;
+}
+
+.approval-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.approval-input {
+  flex: 1;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.approval-input input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  background: transparent;
+}
+
+.approval-copy-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.approval-copy-btn:hover {
+  background: #f8fafc;
+}
+
+.approval-remove-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.approval-remove-btn:hover {
+  background: #fef2f2;
+}
+
+.approval-text {
+  margin-top: 10px;
+}
+
+.approval-text textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.approval-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.approval-send-btn {
+  border: none;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.approval-send-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.approval-history {
+  margin-top: 14px;
+}
+
+.approval-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.approval-history-loading {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.approval-history-empty {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.approval-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.approval-history-item {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+}
+
+.approval-history-time {
+  font-weight: 900;
+  font-size: 12px;
+  color: #0f172a;
+  padding-top: 6px;
+}
+
+.approval-history-card {
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.approval-history-item.approved .approval-history-card {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.approval-history-item.changes .approval-history-card {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.approval-history-item.edited .approval-history-card {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.approval-history-item.sent .approval-history-card {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.approval-history-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.approval-history-who .material-icons {
+  font-size: 16px;
+}
+
+.approval-history-title {
+  margin-top: 6px;
+  font-weight: 900;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.approval-history-comment {
+  margin-top: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
 .modal-footer {
   padding: 14px 18px;
   border-top: 1px solid #f1f5f9;
@@ -243,4 +477,3 @@
 .cancel-btn:hover {
   background: #f8fafc;
 }
-

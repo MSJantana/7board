@@ -5,6 +5,7 @@ import { SolicitacaoForm } from './SolicitacaoForm';
 import { TopHeader } from './components/TopHeader';
 import { AuthProvider } from './context/AuthContext';
 import { Login } from './pages/Login';
+import { Approval } from './pages/Approval';
 import { AdminLayout } from './admin/AdminLayout';
 import { Dashboard } from './admin/Dashboard';
 import { SolicitacoesList } from './admin/SolicitacoesList';
@@ -67,6 +68,7 @@ function App() {
         {/* Layout do Formulário Público (Externo/Pipefy style) */}
         <Route element={<PublicFormLayout />}>
           <Route path="/solicitacoes" element={<SolicitacaoForm />} />
+          <Route path="/approval/:id" element={<Approval />} />
         </Route>
       </Routes>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />

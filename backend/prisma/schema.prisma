@@ -41,6 +41,12 @@ enum SlaResult {
   BREACHED
 }
 
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
+}
+
 model Solicitacao {
   id              String   @id @default(uuid())
   departamento    String
@@ -61,6 +67,11 @@ model Solicitacao {
 
   stageId          String
   stage            Stage    @relation(fields: [stageId], references: [id])
+
+  approvalStatus   ApprovalStatus @default(PENDING)
+  approvalMessage  String?  @db.LongText
+  approvalLinks    Json?
+  approvalUpdatedAt DateTime?
 
   requesterId      String?
   requester        User?    @relation("Requester", fields: [requesterId], references: [id], onDelete: SetNull)

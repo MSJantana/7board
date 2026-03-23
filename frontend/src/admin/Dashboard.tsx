@@ -35,11 +35,35 @@ interface Solicitacao {
   stage?: Stage | null;
   observacoes?: string;
   arquivoUrl?: string;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'CHANGES_REQUESTED';
+  approvalMessage?: string | null;
+  approvalUpdatedAt?: string | null;
   createdAt: string;
   archivedAt?: string | null;
 }
 
 type Stage = StageModel;
+
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(max, Math.max(min, value));
+};
+
+const getTimeline = (createdAtRaw: string, deliveryAtRaw: string) => {
+  const start = parseISO(createdAtRaw);
+  const end = parseISO(deliveryAtRaw);
+  if (!isValid(start) || !isValid(end)) return null;
+
+  const startMs = start.getTime();
+  const endMs = end.getTime();
+  if (endMs <= startMs) return null;
+
+  const nowMs = Date.now();
+  const ratio = clamp((nowMs - startMs) / (endMs - startMs), 0, 1);
+  const msLeft = endMs - nowMs;
+  const isOverdue = nowMs >= endMs;
+  const isWarning = msLeft > 0 && msLeft <= 72 * 60 * 60 * 1000;
+  return { start, end, ratio, isOverdue, isWarning };
+};
 
 const getStageColor = (name: string) => {
   switch (name) {
@@ -96,17 +120,24 @@ const calculateCardStatus = (item: Solicitacao) => {
   }
 
   const isActive = !item.archivedAt;
+  const isAdjusted = Boolean(item.observacoes?.toLowerCase().includes('prazo alterado'));
+  const isWarning = hoursLeft <= 72 && hoursLeft > 0 && isActive;
   const isUrgent = hoursLeft < 24 && isActive;
   const showOverdueCard = isOverdue && isActive;
+  const showAdjustedCard = isAdjusted && isActive && !isOverdue;
 
   let statusText = '';
   if (showOverdueCard) {
     statusText = 'Atrasada.';
+  } else if (showAdjustedCard) {
+    statusText = 'Prazo alterado.';
+  } else if (isWarning) {
+    statusText = 'Prazo próximo.';
   } else if (isUrgent) {
     statusText = 'Urgente.';
   }
 
-  return { isUrgent, showOverdueCard, statusText };
+  return { isUrgent, isWarning, showOverdueCard, showAdjustedCard, statusText };
 };
 
 const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCardProps & { isOverlay?: boolean }) => {
@@ -123,7 +154,16 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
     zIndex: isDragging || isOverlay ? 999 : 1,
   };
 
-  const { isUrgent, showOverdueCard, statusText } = calculateCardStatus(item);
+  const { isUrgent, isWarning, showOverdueCard, showAdjustedCard, statusText } = calculateCardStatus(item);
+  const timeline = getTimeline(item.createdAt, item.deliveryAt);
+  let timelineStateClass = '';
+  if (timeline) {
+    if (timeline.isOverdue) {
+      timelineStateClass = 'overdue';
+    } else if (timeline.isWarning) {
+      timelineStateClass = 'warning';
+    }
+  }
 
   return (
     <button
@@ -132,7 +172,7 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
       style={style}
       {...listeners}
       {...attributes}
-      className={`kanban-card ${isDragging ? 'dragging' : ''} ${isOverlay ? 'overlay' : ''} ${showOverdueCard ? 'overdue' : ''}`}
+      className={`kanban-card ${isDragging ? 'dragging' : ''} ${isOverlay ? 'overlay' : ''} ${showOverdueCard ? 'overdue' : ''} ${!showOverdueCard && isWarning ? 'warning' : ''}`}
       onClick={() => !isDragging && onCardClick(item)}
       aria-label={`Solicitação ${item.tipoSolicitacao} para ${item.departamento}. ${statusText}`}
     >
@@ -146,6 +186,14 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
       <h4 className="card-title">{item.tipoSolicitacao}</h4>
 
       <div className="card-desc">{item.descricao}</div>
+
+      {item.approvalStatus && item.approvalStatus !== 'PENDING' && (
+        <div className={`approval-indicator ${item.approvalStatus === 'APPROVED' ? 'approved' : 'changes'}`}>
+          <span className="material-icons" aria-hidden="true">
+            {item.approvalStatus === 'APPROVED' ? 'thumb_up' : 'thumb_down'}
+          </span>
+        </div>
+      )}
 
       {showOverdueCard && (
         <div
@@ -164,6 +212,37 @@ const KanbanCardComponent = ({ item, onCardClick, isOverlay = false }: KanbanCar
             error
           </span>
           <span>Prazo vencido</span>
+        </div>
+      )}
+
+      {showAdjustedCard && (
+        <div className="card-alert warning">
+          <span className="material-icons" style={{ fontSize: '16px' }}>
+            schedule
+          </span>
+          <span>Prazo alterado</span>
+        </div>
+      )}
+
+      {timeline && (
+        <div className="card-timeline" aria-label="Progresso até a entrega">
+          <div className="card-timeline-labels">
+            <span>{format(timeline.start, 'dd/MM HH:mm')}</span>
+            <span>{format(timeline.end, 'dd/MM HH:mm')}</span>
+          </div>
+          <div className={`card-timeline-track ${timelineStateClass}`}>
+            <div
+              className="card-timeline-fill"
+              style={{
+                width: `${Math.round(timeline.ratio * 100)}%`,
+              }}
+            />
+            <span className="card-timeline-dot start" aria-hidden="true" />
+            <span
+              className={`card-timeline-dot end ${timelineStateClass}`}
+              aria-hidden="true"
+            />
+          </div>
         </div>
       )}
 
@@ -242,6 +321,7 @@ export function Dashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
   const [selectedCard, setSelectedCard] = useState<Solicitacao | null>(null);
   const [stages, setStages] = useState<Stage[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchStagesData = async () => {
     try {
@@ -293,6 +373,16 @@ export function Dashboard() {
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   };
 
+  const refreshCardsSoft = async () => {
+    setRefreshing(true);
+    try {
+      const data = await fetchCardsData();
+      setSolicitacoes(data);
+    } finally {
+      globalThis.setTimeout(() => setRefreshing(false), 250);
+    }
+  };
+
   const [activeId, setActiveId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -322,6 +412,12 @@ export function Dashboard() {
 
     if (activeCard.stageId === overId) return;
 
+    const overStage = stages.find((s) => s.id === overId);
+    if (overStage?.kind === 'DONE' && activeCard.approvalStatus !== 'APPROVED') {
+      toast.warning('Esta solicitação ainda não foi aprovada. Aprovar antes de concluir.');
+      return;
+    }
+
     setSolicitacoes((prev) => prev.map((item) => (item.id === activeId ? { ...item, stageId: overId } : item)));
 
     try {
@@ -329,6 +425,7 @@ export function Dashboard() {
       const normalized = normalizeCardsFromApi([response.data as unknown])[0] as Solicitacao;
       setSolicitacoes((prev) => prev.map((item) => (item.id === activeId ? { ...item, ...normalized } : item)));
       toast.success('Status atualizado!');
+      void refreshCardsSoft();
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Erro ao atualizar status.');
@@ -343,7 +440,7 @@ export function Dashboard() {
   return (
     <div className="dashboard-container">
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="kanban-board">
+        <div className={`kanban-board ${refreshing ? 'refreshing' : ''}`}>
           {stages
             .slice()
             .sort((a, b) => a.order - b.order)
@@ -389,8 +486,7 @@ export function Dashboard() {
                 toast.success('Atualizado!');
                 const response = await axios.get(`/api/cards/${id}`);
                 setSelectedCard(response.data as Solicitacao);
-                const data = await fetchCardsData();
-                setSolicitacoes(data);
+                await refreshCardsSoft();
               })
               .catch((error) => {
                 console.error('Error updating status:', error);
