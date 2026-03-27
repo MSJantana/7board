@@ -148,12 +148,29 @@ export function Approval() {
           ? 'Solicitação de ajustes registrada.'
           : 'Resposta registrada.';
 
+    const handleOk = () => {
+      try {
+        window.close();
+      } catch {
+        // ignore
+      }
+      setTimeout(() => {
+        if (window.history.length > 1) {
+          window.history.back();
+        } else {
+          window.location.href = '/';
+        }
+      }, 100);
+    };
+
     return (
       <div className="approval-page">
         <div className="approval-card">
           <div className="approval-header">
             <h1>Solicitação enviada</h1>
-            <div className="approval-badge status-approved">OK</div>
+            <button type="button" className="approval-badge status-approved approval-close-btn" onClick={handleOk}>
+              OK
+            </button>
           </div>
           <div className="approval-success">
             {decisionLabel} Você pode fechar esta página.

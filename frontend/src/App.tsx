@@ -12,6 +12,8 @@ import { SolicitacoesList } from './admin/SolicitacoesList';
 import { ArquivadosList } from './admin/ArquivadosList';
 import { UsuariosList } from './admin/UsuariosList';
 
+import { AnalyticsDashboard } from './admin/AnalyticsDashboard';
+
 function RequireAuth({ children }: Readonly<{ children: React.ReactNode }>) {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -59,6 +61,7 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
+          <Route path="analytics" element={<AnalyticsDashboard />} />
           <Route path="solicitacoes" element={<SolicitacoesList />} />
           <Route path="arquivados" element={<ArquivadosList />} />
           <Route path="usuarios" element={<UsuariosList />} />

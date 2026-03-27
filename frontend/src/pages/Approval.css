@@ -40,6 +40,10 @@
   text-transform: uppercase;
 }
 
+.approval-close-btn {
+  cursor: pointer;
+}
+
 .approval-badge.status-approved {
   background: #dcfce7;
   border-color: #86efac;

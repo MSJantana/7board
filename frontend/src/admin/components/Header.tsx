@@ -8,6 +8,8 @@ export function Header() {
     switch (pathname) {
       case '/admin':
       case '/admin/':
+        return 'Kanban';
+      case '/admin/analytics':
         return 'Dashboard';
       case '/admin/solicitacoes':
         return 'Solicitações';

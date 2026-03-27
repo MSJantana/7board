@@ -56,10 +56,24 @@ export function Sidebar({ isOpen, onClose, isCollapsed = false, toggleCollapse }
                   className="nav-link"
                   onClick={handleLinkClick}
                   aria-current={pathname === '/admin' ? 'page' : undefined}
+                  title={isCollapsed ? 'Kanban' : ''}
+                >
+                  <span className="material-symbols-outlined icon" aria-hidden="true">
+                    view_kanban
+                  </span>
+                  <span className="link-text">Kanban</span>
+                </Link>
+              </li>
+              <li className={isActive('/admin/analytics')}>
+                <Link
+                  to="/admin/analytics"
+                  className="nav-link"
+                  onClick={handleLinkClick}
+                  aria-current={pathname === '/admin/analytics' ? 'page' : undefined}
                   title={isCollapsed ? 'Dashboard' : ''}
                 >
                   <span className="material-symbols-outlined icon" aria-hidden="true">
-                    dashboard_customize
+                    pie_chart
                   </span>
                   <span className="link-text">Dashboard</span>
                 </Link>
