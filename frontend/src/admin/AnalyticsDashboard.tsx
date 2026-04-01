@@ -126,10 +126,10 @@ export function AnalyticsDashboard() {
   }, [solicitacoes]);
 
   const chartData = [
-    { name: 'Concluído', value: metrics.concluido, fill: '#1e293b' },
-    { name: 'Fazendo', value: metrics.fazendo, fill: '#8b5cf6' },
-    { name: 'Novas Solicitações', value: metrics.novas, fill: '#fbbf24' },
-    { name: 'Pendente de aprovação', value: metrics.pendente, fill: '#10b981' },
+    { name: 'Concluído', value: metrics.concluido, fill: '#1f854dff' },
+    { name: 'Fazendo', value: metrics.fazendo, fill: '#767B91' },
+    { name: 'Novas Solicitações', value: metrics.novas, fill: '#1C99E0' },
+    { name: 'Pendente de aprovação', value: metrics.pendente, fill: '#F4D35E' },
     { name: 'Parado', value: metrics.parado, fill: '#ef4444' },
   ].filter(item => item.value > 0);
 
@@ -159,10 +159,10 @@ export function AnalyticsDashboard() {
 
   const getTaskStatusInfo = (card: Solicitacao) => {
     const status = getDashboardStatus(card);
-    if (status === 'Concluído') return { text: status, color: '#1e293b' };
-    if (status === 'Fazendo') return { text: status, color: '#8b5cf6' };
-    if (status === 'Novas Solicitações') return { text: status, color: '#fbbf24' };
-    if (status === 'Pendente de aprovação') return { text: status, color: '#10b981' };
+    if (status === 'Concluído') return { text: status, color: '#1f854dff' };
+    if (status === 'Fazendo') return { text: status, color: '#767B91' };
+    if (status === 'Novas Solicitações') return { text: status, color: '#1C99E0' };
+    if (status === 'Pendente de aprovação') return { text: status, color: '#F4D35E' };
     return { text: status, color: '#ef4444' };
   };
 
@@ -209,7 +209,7 @@ export function AnalyticsDashboard() {
             <div className="chart-legend">
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#1e293b' }}></span>
+                  <span className="legend-dot" style={{ backgroundColor: '#1f854dff' }}></span>
                   <span>Concluído</span>
                 </div>
                 <span className="legend-value">{metrics.concluidoPercent}%</span>
@@ -217,7 +217,7 @@ export function AnalyticsDashboard() {
               
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#8b5cf6' }}></span>
+                  <span className="legend-dot" style={{ backgroundColor: '#767B91' }}></span>
                   <span>Fazendo</span>
                 </div>
                 <span className="legend-value">{metrics.fazendoPercent}%</span>
@@ -225,7 +225,7 @@ export function AnalyticsDashboard() {
 
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#fbbf24' }}></span>
+                  <span className="legend-dot" style={{ backgroundColor: '#1C99E0' }}></span>
                   <span>Novas Solicitações</span>
                 </div>
                 <span className="legend-value">{metrics.novasPercent}%</span>
@@ -233,7 +233,7 @@ export function AnalyticsDashboard() {
               
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#10b981' }}></span>
+                  <span className="legend-dot" style={{ backgroundColor: '#F4D35E' }}></span>
                   <span>Pendente de aprovação</span>
                 </div>
                 <span className="legend-value">{metrics.pendentePercent}%</span>
