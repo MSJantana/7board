@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { PieChart, Pie, ResponsiveContainer, Tooltip } from 'recharts';
-import { differenceInHours, parseISO } from 'date-fns';
 import { getCachedCards, normalizeCardsFromApi } from './services/adminCache';
 import './AnalyticsDashboard.css';
 
@@ -20,6 +19,54 @@ interface Solicitacao {
   archivedAt?: string | null;
   completedAt?: string | null;
 }
+
+type DashboardStatus = 'Novas Solicitações' | 'Fazendo' | 'Pendente de aprovação' | 'Parado' | 'Concluído';
+
+const normalizeStageName = (name: string) => {
+  return name
+    .normalize('NFD')
+    .replaceAll(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+};
+
+const getDashboardStatus = (card: Solicitacao): DashboardStatus => {
+  const stageName = card.stage?.name ?? '';
+  const normalizedStageName = normalizeStageName(stageName);
+
+  const isDone =
+    Boolean(card.completedAt) ||
+    Boolean(card.archivedAt) ||
+    card.stage?.kind === 'DONE' ||
+    normalizedStageName === 'concluido';
+
+  if (isDone) return 'Concluído';
+
+  if (normalizedStageName === 'a aprovar' || card.stage?.kind === 'VALIDATION') {
+    return 'Pendente de aprovação';
+  }
+
+  if (normalizedStageName === 'parado') {
+    return 'Parado';
+  }
+
+  if (normalizedStageName === 'novas solicitacoes' || card.stage?.kind === 'TODO') {
+    return 'Novas Solicitações';
+  }
+
+  if (
+    normalizedStageName === 'videos/materias' ||
+    normalizedStageName === 'cobertura de eventos' ||
+    normalizedStageName === 'arte' ||
+    normalizedStageName === 'fazendo'
+  ) {
+    return 'Fazendo';
+  }
+
+  if (card.stage?.kind === 'IN_PROGRESS') return 'Fazendo';
+
+  return 'Fazendo';
+};
 
 export function AnalyticsDashboard() {
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => (getCachedCards() as Solicitacao[]) ?? []);
@@ -46,56 +93,44 @@ export function AnalyticsDashboard() {
   // Mapear dados
   const metrics = useMemo(() => {
     const total = solicitacoes.length;
-    let completed = 0;
-    let inProgress = 0;
-    let behind = 0;
-
-    const now = new Date();
+    let novas = 0;
+    let fazendo = 0;
+    let pendente = 0;
+    let parado = 0;
+    let concluido = 0;
 
     solicitacoes.forEach((card) => {
-      const stageName = card.stage?.name ?? '';
-      const normalizedStageName = stageName
-        .normalize('NFD')
-        .replaceAll(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
-
-      const isDone =
-        Boolean(card.completedAt) ||
-        Boolean(card.archivedAt) ||
-        card.stage?.kind === 'DONE' ||
-        normalizedStageName === 'concluido';
-      
-      if (isDone) {
-        completed++;
-      } else {
-        const deliveryDate = parseISO(card.deliveryAt);
-        const hoursLeft = differenceInHours(deliveryDate, now);
-        
-        if (hoursLeft < 0) {
-          behind++;
-        } else {
-          inProgress++;
-        }
-      }
+      const status = getDashboardStatus(card);
+      if (status === 'Concluído') concluido++;
+      else if (status === 'Parado') parado++;
+      else if (status === 'Pendente de aprovação') pendente++;
+      else if (status === 'Novas Solicitações') novas++;
+      else fazendo++;
     });
 
     const getPercent = (val: number) => total === 0 ? 0 : Number(((val / total) * 100).toFixed(1));
 
     return {
       total,
-      completed,
-      completedPercent: getPercent(completed),
-      inProgress,
-      inProgressPercent: getPercent(inProgress),
-      behind,
-      behindPercent: getPercent(behind),
+      novas,
+      novasPercent: getPercent(novas),
+      fazendo,
+      fazendoPercent: getPercent(fazendo),
+      pendente,
+      pendentePercent: getPercent(pendente),
+      parado,
+      paradoPercent: getPercent(parado),
+      concluido,
+      concluidoPercent: getPercent(concluido),
     };
   }, [solicitacoes]);
 
   const chartData = [
-    { name: 'Concluído', value: metrics.completed, fill: '#1e293b' }, // Escuro
-    { name: 'Em Andamento', value: metrics.inProgress, fill: '#3b82f6' }, // Azul
-    { name: 'Atrasado', value: metrics.behind, fill: '#a7f3d0' }, // Verde claro
+    { name: 'Concluído', value: metrics.concluido, fill: '#1e293b' },
+    { name: 'Fazendo', value: metrics.fazendo, fill: '#8b5cf6' },
+    { name: 'Novas Solicitações', value: metrics.novas, fill: '#fbbf24' },
+    { name: 'Pendente de aprovação', value: metrics.pendente, fill: '#10b981' },
+    { name: 'Parado', value: metrics.parado, fill: '#ef4444' },
   ].filter(item => item.value > 0);
 
   // Fallback caso não tenha dados para mostrar algo visualmente
@@ -123,24 +158,12 @@ export function AnalyticsDashboard() {
   }, [sortedTasks, tasksStartIndex, tasksEndIndex]);
 
   const getTaskStatusInfo = (card: Solicitacao) => {
-    if (card.stage?.kind === 'DONE' || card.archivedAt) {
-      return { text: 'Concluído', color: '#10b981' };
-    }
-    
-    const deliveryDate = parseISO(card.deliveryAt);
-    const hoursLeft = differenceInHours(deliveryDate, new Date());
-    
-    if (card.stage?.kind === 'VALIDATION') {
-      if (card.approvalStatus === 'APPROVED') return { text: 'Aprovado', color: '#f59e0b' };
-      if (card.approvalStatus === 'CHANGES_REQUESTED') return { text: 'Ajustes', color: '#ef4444' };
-      return { text: 'Pendente', color: '#3b82f6' };
-    }
-
-    if (hoursLeft < 0) {
-      return { text: 'Atrasado', color: '#1e293b' };
-    }
-
-    return { text: 'Em Andamento', color: '#8b5cf6' };
+    const status = getDashboardStatus(card);
+    if (status === 'Concluído') return { text: status, color: '#1e293b' };
+    if (status === 'Fazendo') return { text: status, color: '#8b5cf6' };
+    if (status === 'Novas Solicitações') return { text: status, color: '#fbbf24' };
+    if (status === 'Pendente de aprovação') return { text: status, color: '#10b981' };
+    return { text: status, color: '#ef4444' };
   };
 
   const getInitials = (email?: string) => {
@@ -189,23 +212,39 @@ export function AnalyticsDashboard() {
                   <span className="legend-dot" style={{ backgroundColor: '#1e293b' }}></span>
                   <span>Concluído</span>
                 </div>
-                <span className="legend-value">{metrics.completedPercent}%</span>
+                <span className="legend-value">{metrics.concluidoPercent}%</span>
               </div>
               
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#3b82f6' }}></span>
-                  <span>Em Andamento</span>
+                  <span className="legend-dot" style={{ backgroundColor: '#8b5cf6' }}></span>
+                  <span>Fazendo</span>
                 </div>
-                <span className="legend-value">{metrics.inProgressPercent}%</span>
+                <span className="legend-value">{metrics.fazendoPercent}%</span>
+              </div>
+
+              <div className="legend-item">
+                <div className="legend-label">
+                  <span className="legend-dot" style={{ backgroundColor: '#fbbf24' }}></span>
+                  <span>Novas Solicitações</span>
+                </div>
+                <span className="legend-value">{metrics.novasPercent}%</span>
               </div>
               
               <div className="legend-item">
                 <div className="legend-label">
-                  <span className="legend-dot" style={{ backgroundColor: '#a7f3d0' }}></span>
-                  <span>Atrasado</span>
+                  <span className="legend-dot" style={{ backgroundColor: '#10b981' }}></span>
+                  <span>Pendente de aprovação</span>
                 </div>
-                <span className="legend-value">{metrics.behindPercent}%</span>
+                <span className="legend-value">{metrics.pendentePercent}%</span>
+              </div>
+
+              <div className="legend-item">
+                <div className="legend-label">
+                  <span className="legend-dot" style={{ backgroundColor: '#ef4444' }}></span>
+                  <span>Parado</span>
+                </div>
+                <span className="legend-value">{metrics.paradoPercent}%</span>
               </div>
             </div>
           </div>
@@ -220,6 +259,7 @@ export function AnalyticsDashboard() {
               <thead>
                 <tr>
                   <th>Título</th>
+                  <th>Departamento</th>
                   <th>Atribuído a</th>
                   <th>Data de Entrega</th>
                   <th>Status</th>
@@ -234,6 +274,9 @@ export function AnalyticsDashboard() {
                     <tr key={task.id}>
                       <td>
                         <div className="task-title">{task.tipoSolicitacao}</div>
+                      </td>
+                      <td>
+                        {task.departamento || '-'}
                       </td>
                       <td>
                         <div className="task-assignee">
@@ -256,7 +299,7 @@ export function AnalyticsDashboard() {
                 })}
                 {sortedTasks.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '30px' }}>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '30px' }}>
                       Nenhuma solicitação encontrada.
                     </td>
                   </tr>

@@ -4,15 +4,28 @@ import { toast } from 'react-toastify';
 import { ASRSLogo } from './components/ASRSLogo';
 import './SolicitacaoForm.css';
 
+const SLA_BY_TYPE: Record<string, number> = {
+  'Transmissão de live - 30 dias': 30,
+  'Cobertura de Eventos - 30 dias': 30,
+  'Vídeo - 30 dias': 30,
+  'Matéria/Imprensa - 30 dias': 30,
+  'Impressos (Revista/Folder/Panfleto/Cartão) - 20 dias': 20,
+  'Boletim Informativo - 30 dias': 30,
+  'Post instagram/whatsapp - 10 dias': 10,
+  'Identidade visual para eventos (Telão/Divulgação) - 30 dias': 30,
+  'Arte para personalizados (Pulseira/Bloco/Camiseta) - 15 dias': 15,
+};
+
 const TIPOS_SOLICITACAO = [
-  'Arte para Instagram/Whatsapp (5 dias)',
-  'Cobertura de Eventos (20 dias)',
-  'Assessoria de Imprensa/Matérias (20 dias)',
+  'Transmissão de live (30 dias)',
+  'Cobertura de Eventos (30 dias)',
   'Vídeo (30 dias)',
-  'Identidade visual completa para eventos (30 dias)',
-  'Transmissão de Live (30 dias)',
-  'Arquivos digitais como boletim informativo (30 dias)',
-  'Arquivos como pulseiras, camisetas (10 dias)'
+  'Matéria/Imprensa (30 dias)',
+  'Impressos (Revista/Folder/Panfleto/Cartão) (20 dias)',
+  'Boletim Informativo (30 dias)',
+  'Post instagram/whatsapp (10 dias)',
+  'Identidade visual para eventos (Telão/Divulgação) (30 dias)',
+  'Arte para personalizados (Pulseira/Bloco/Camiseta) (15 dias)'
 ];
 
 const OPCOES_VEICULACAO = [
@@ -76,6 +89,25 @@ export function SolicitacaoForm() {
       // Auto-fill time if date is selected and time is empty
       if (name === 'dataEntrega' && value && !prev.horarioEntrega) {
         newData.horarioEntrega = getCurrentTime();
+      }
+      
+      // Auto-fill date/time when tipoSolicitacao is chosen
+      if (name === 'tipoSolicitacao') {
+        const days = (() => {
+          const mapped = SLA_BY_TYPE[value];
+          if (typeof mapped === 'number' && mapped > 0) return mapped;
+          const m = /(\d+)\s*dias/i.exec(value);
+          return m ? Number(m[1]) : 0;
+        })();
+        if (days > 0) {
+          const target = new Date();
+          target.setDate(target.getDate() + days);
+          const targetDate = target.toISOString().split('T')[0];
+          newData.dataEntrega = targetDate;
+          if (!prev.horarioEntrega) {
+            newData.horarioEntrega = getCurrentTime();
+          }
+        }
       }
       
       return newData;
